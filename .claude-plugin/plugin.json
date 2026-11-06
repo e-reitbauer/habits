@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "habits",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Professional development habits for Claude: daily skills (commit, pr, ship, ui, hygiene, secrets, dependencies, errors) plus granular units for languages, tools and workflows that load only when used.",
   "author": {

@@ -32,16 +32,22 @@ habits needs Python 3 on your PATH and uses only its standard library.
 | `secrets` | touching keys, tokens, `.env` files or CI secrets |
 | `dependencies` | adding, upgrading or removing a dependency |
 | `errors` | writing error handling and validation |
+| `versioning` | picking a version: SemVer, CalVer, build numbers, pre-releases, tags |
+| `branching` | branches, merges and branching strategies: trunk-based, GitHub Flow, Git Flow, release branches |
+| `patterns` | structuring code: architecture, layering and when a design pattern earns its place |
+| `context` | checking a long session for context rot and recovering from it |
 | `units` | listing or loading units by hand |
 | `new-unit` | writing a new unit or improving one: triggers, content, validation |
 
-**Units** cover everything extra: one small file per language, tool, platform, testing practice or workflow.
+**Units** cover everything extra: one small file per language, framework, tool, platform, database, testing practice or workflow.
 
 | Category | Units |
 |---|---|
-| languages | `kotlin`, `swift` |
-| tools | `gradle`, `maven` |
+| languages | `kotlin`, `swift`, `typescript`, `python`, `rust` |
+| frameworks | `vue`, `nuxt`, `spring-boot`, `compose-multiplatform` |
+| tools | `gradle`, `maven`, `docker-compose`, `xcode`, `github-actions` |
 | platforms | `android` |
+| databases | `postgres` |
 | testing | `unit-testing`, `playwright` |
 | workflows | `openspec` |
 
@@ -62,6 +68,20 @@ A unit can also run a `script` whose output becomes part of it. The `openspec` u
 
 When Claude touches a code file type that no unit covers, it offers to write one. When a unit names a language server plugin that isn't installed, it suggests installing it. Both can be switched off.
 
+## Secret guard
+
+Before Claude runs a `git commit` or `git push`, habits scans the added lines it would record for API keys, tokens, private keys and files like `.env`. If it finds one, the command is blocked and Claude is told where (never the value) and what to do. A deliberate fake, such as a key in a test fixture, is allowed by marking its line with `habits:allow-secret`. Switch it off with `habits config set secretGuard off`.
+
+## Long sessions
+
+Long contexts lose earlier instructions: they're still there, but followed less reliably. habits watches the context size from the session transcript:
+
+- A unit loaded long ago is injected again the next time it applies, once the context has grown by `refreshTokens` (150k by default) since it loaded.
+- Every `rotCheckEvery` tokens (150k by default), Claude is asked to run the `context` skill's check for context rot, and to suggest a compaction or a fresh session with a handoff note when it finds it.
+- After a compaction, everything reloads as it's needed.
+
+Set either threshold to `0` to switch it off.
+
 ## Session names
 
 Once the task is clear, Claude names the session with two to four words, such as `fix-login-redirect`, and renames it when the work moves on. The name shows up with your next message. It's set through Claude Code's official hook field, and survives compaction. Switch it off with `habits config set autoTitle off`.
@@ -74,7 +94,8 @@ habits units                 every unit with its triggers
 habits load <unit>           print a unit, exactly as Claude receives it
 habits validate              check every unit for errors
 habits config                show settings
-habits config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off, autoTitle on|off
+habits config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off, autoTitle on|off,
+                             secretGuard on|off, refreshTokens <n>, rotCheckEvery <n>
 habits title <name>          name the current session (Claude runs this)
 habits config disable <unit> stop a unit from loading (enable to undo)
 habits install-cli [DIR]     put the habits command in DIR (default ~/.local/bin)
