@@ -204,7 +204,7 @@ def cmd_validate(args):
                 warnings.append(f"{rel}: glob {g!r} also in {globs[g]}")
             globs[g] = rel
         lines = len(u.body.splitlines())
-        if lines > 40:
+        if lines > 60:
             warnings.append(f"{rel}: {lines} lines; units should stay short")
     for w in warnings:
         print(f"warning: {w}")

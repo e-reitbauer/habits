@@ -33,12 +33,13 @@ habits needs Python 3 on your PATH and uses only its standard library.
 | `dependencies` | adding, upgrading or removing a dependency |
 | `errors` | writing error handling and validation |
 | `units` | listing or loading units by hand |
+| `new-unit` | writing a new unit or improving one: triggers, content, validation |
 
 **Units** cover everything extra: one small file per language, tool, platform, testing practice or workflow.
 
 | Category | Units |
 |---|---|
-| languages | `kotlin` |
+| languages | `kotlin`, `swift` |
 | tools | `gradle`, `maven` |
 | platforms | `android` |
 | testing | `unit-testing`, `playwright` |

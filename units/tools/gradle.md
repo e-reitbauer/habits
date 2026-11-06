@@ -4,10 +4,26 @@ title: Gradle
 paths: ["**/*.gradle.kts", "**/*.gradle", "**/gradle/libs.versions.toml", "**/gradle.properties", "**/gradle/wrapper/**"]
 commands: ["gradlew", "gradle"]
 ---
-Gradle:
-- Always use the wrapper (`./gradlew`), never a global `gradle`. Don't change the wrapper version unless asked.
-- Run the narrowest task that proves a change (`./gradlew :module:test --tests 'SomeTest'`, `:module:compileKotlin…`), and the full build only before finishing. Add `--continue` to collect every failure in one run.
-- Long builds: run them in the background, write output to a log, and read the first error, not the last.
-- If the project has a version catalog (`gradle/libs.versions.toml`), every dependency and plugin version goes there and build scripts use `libs.…`. Never hard-code versions in build scripts.
-- Shared build logic belongs in the project's convention plugins (`build-logic/` or `buildSrc/`), not copied between modules.
-- Keep builds configuration-cache friendly: no work at configuration time, no `project` access inside task actions.
+Gradle. Use the Kotlin DSL (`*.gradle.kts`) for new build logic.
+
+Running builds
+- Always the wrapper (`./gradlew`), never a global `gradle`. Don't change `gradle/wrapper/gradle-wrapper.properties` unless asked.
+- Narrowest task first: `:module:compileKotlin…`, `:module:test --tests 'pkg.SomeTest'`; the full `build` only before finishing. `--continue` shows every failure in one run; `--offline` when dependencies are cached.
+- Long builds run in the background with output to a log. Read the first error (`grep -n "e: \|error:\|FAILED" build.log`), not the tail.
+- Don't `clean` by habit: it throws away the build cache. Use it only for suspected stale output.
+
+Dependencies
+- The version catalog (`gradle/libs.versions.toml`) is the single source of versions: `[versions]`, `[libraries]`, `[plugins]`, `[bundles]`. Build scripts use `libs.foo` and `alias(libs.plugins.foo)`.
+- No versions in build scripts, and no dynamic versions (`+`, `latest.release`).
+- `implementation` over `api` unless the dependency's types are part of the module's public API; `testImplementation` for test-only libraries.
+- Investigate conflicts with `./gradlew :module:dependencyInsight --dependency <name> --configuration <conf>`.
+
+Build logic
+- Shared configuration goes in convention plugins (a `build-logic/` included build, or `buildSrc`) applied by id. No copy-paste between modules, and no new `allprojects` / `subprojects` blocks.
+- Apply plugins in the `plugins {}` block, not with `apply plugin:`.
+- Lazy APIs only: `tasks.register`, `Provider` and `Property`. Never `tasks.create` or eager `getByName` in new code.
+- Stay configuration-cache compatible: no work at configuration time, no `project` access inside task actions.
+
+Settings and properties
+- Modules are declared in `settings.gradle.kts`, with repositories centralized in `dependencyResolutionManagement`.
+- `gradle.properties` holds build flags (`org.gradle.caching=true`, `org.gradle.configuration-cache=true`, JVM args), never secrets.
