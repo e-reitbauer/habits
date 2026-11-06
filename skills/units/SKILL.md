@@ -14,6 +14,6 @@ Use the habits CLI whose path was given at session start (`python3 "<plugin root
 - `units`: every unit with its triggers. Use it to find the right id.
 - `load <id>`: prints the unit. Follow its contents as project instructions for the rest of the session.
 - `status`: which units apply to this project and why, file types with no unit, missing LSPs, config.
-- `config`, `config set autoLsp|autoCreate off|suggest`, `config set notify on|off`, `config disable|enable <id>`: only when the user asks to change behaviour.
+- `config`, `config set autoLsp|autoCreate off|suggest`, `config set notify|autoTitle on|off`, `config disable|enable <id>`: only when the user asks to change behaviour.
 
 When the user asks for a unit that doesn't exist, say so and list the closest ids.

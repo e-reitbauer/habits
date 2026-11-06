@@ -1,11 +1,13 @@
-"""Hook handlers. Each reads the hook payload and returns (text to inject, ids of units it loaded)."""
+"""Hook handlers. Each reads the hook payload and returns a dict with any of:
+context (text to inject), loaded (ids of units it loaded), title (session title to set).
+"""
 
 import os
 import re
 from pathlib import Path
 
 import config
-from units import ROOT, load_units, project_root
+from units import ROOT, command_words, load_units, project_root
 
 # Extensions that never call for a unit of their own
 NON_CODE = {
@@ -15,6 +17,12 @@ NON_CODE = {
     "resolved", "jar", "zip", "keystore", "jks",
 }
 FILE_TOOLS = {"Read", "Edit", "Write", "MultiEdit", "NotebookEdit"}
+TITLE_LIMIT = 60
+
+NAMING = ("Name this session: as soon as the task is clear, run `habits title \"<name>\"` with two to four "
+          "lowercase words joined by hyphens that name the task or project (e.g. `fix-login-redirect`). "
+          "Run it again when the work moves to a clearly different task. The title appears with the "
+          "user's next message.")
 
 
 def _block(unit, cwd, root):
@@ -39,29 +47,64 @@ def skill_index():
     return "\n".join(lines)
 
 
+def requested_title(command):
+    """The title from a `habits title <name>` call inside a shell command, if any."""
+    for words in command_words(command):
+        if words[0] == "habits" and words[1:2] == ["title"]:
+            name = " ".join(words[2:])
+        elif words[0].startswith("python") and len(words) > 2 and words[1].endswith("/habits") and words[2] == "title":
+            name = " ".join(words[3:])
+        else:
+            continue
+        name = name.strip()
+        if name and len(name) <= TITLE_LIMIT and "\n" not in name:
+            return name
+    return None
+
+
 def session_start(payload):
     session = payload.get("session_id", "default")
     cwd = Path(payload.get("cwd") or os.getcwd())
     root = project_root(cwd)
-    # A fresh, cleared or compacted context has none of the units loaded before
-    config.reset_state(session)
+    # A fresh, cleared or compacted context has lost the units loaded before; a resumed one still has them
+    if payload.get("source") != "resume":
+        title = config.load_state(session).get("title")
+        config.reset_state(session)
+        if title:
+            config.save_state(session, {"loaded": [], "suggested": [], "title": title})
     config.register_root(ROOT)
 
     cfg = config.load_config()
+    state = config.load_state(session)
     units, _ = load_units()
-    marked = [u for u in units if u.markers and u.id not in cfg["disabled"] and u.matches_markers(root)]
+    marked = [u for u in units if u.markers and u.id not in cfg["disabled"]
+              and u.id not in state["loaded"] and u.matches_markers(root)]
     if marked:
-        config.save_state(session, {"loaded": [u.id for u in marked], "suggested": []})
+        state["loaded"] += [u.id for u in marked]
+        config.save_state(session, state)
 
     parts = [
         "habits is active. Load these skills with the Skill tool whenever the situation applies, "
         "even mid-task:\n" + skill_index(),
         "Extra guidance arrives as <habits-unit> blocks when you touch matching files or run matching "
-        "commands; follow them like project instructions. The habits CLI is "
-        f"`python3 \"{ROOT}/habits\"` (`units`, `load <id>`, `status`).",
-        *(_block(u, cwd, root) for u in marked),
+        "commands; follow them like project instructions. The habits CLI is `habits` "
+        f"(or `python3 \"{ROOT}/habits\"`): `units`, `load <id>`, `status`.",
     ]
-    return "\n\n".join(parts), [u.id for u in marked]
+    if cfg["autoTitle"] == "on" and payload.get("source") != "resume" and not state.get("title"):
+        parts.append(NAMING)
+    parts += [_block(u, cwd, root) for u in marked]
+    return {"context": "\n\n".join(parts), "loaded": [u.id for u in marked]}
+
+
+def prompt_submit(payload):
+    session = payload.get("session_id", "default")
+    state = config.load_state(session)
+    title = state.get("pendingTitle")
+    if not title or title == state.get("title") or config.load_config()["autoTitle"] != "on":
+        return {}
+    state["title"] = title
+    config.save_state(session, state)
+    return {"title": title}
 
 
 def _relpath(file_path, cwd):
@@ -77,19 +120,21 @@ def post_tool_use(payload):
     tool_input = payload.get("tool_input") or {}
     session = payload.get("session_id", "default")
     cwd = Path(payload.get("cwd") or os.getcwd())
+    title = None
 
     if tool in FILE_TOOLS:
         target = tool_input.get("file_path") or tool_input.get("notebook_path")
         if not target:
-            return "", []
+            return {}
         rel = _relpath(target, cwd)
         match = lambda u: u.paths and u.matches_path(rel)
     elif tool == "Bash" and tool_input.get("command"):
         rel = None
         command = tool_input["command"]
+        title = requested_title(command)
         match = lambda u: u.commands and u.matches_command(command)
     else:
-        return "", []
+        return {}
 
     cfg = config.load_config()
     state = config.load_state(session)
@@ -119,6 +164,8 @@ def post_tool_use(payload):
                          "technology, offer once to create a habits unit for it (new-unit skill).")
             state["suggested"].append(key)
 
-    if parts:
+    if title:
+        state["pendingTitle"] = title
+    if parts or title:
         config.save_state(session, state)
-    return "\n\n".join(parts), [u.id for u in fresh]
+    return {"context": "\n\n".join(parts), "loaded": [u.id for u in fresh]}

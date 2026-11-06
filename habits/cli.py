@@ -12,22 +12,27 @@ import hooks
 from units import ROOT, glob_regex, load_units, project_root
 
 HOOKS = {"session-start": ("SessionStart", hooks.session_start),
-         "post-tool-use": ("PostToolUse", hooks.post_tool_use)}
+         "post-tool-use": ("PostToolUse", hooks.post_tool_use),
+         "prompt-submit": ("UserPromptSubmit", hooks.prompt_submit)}
 SKIP_DIRS = {".git", "node_modules", "build", "dist", "target", ".gradle", ".idea", ".venv", "__pycache__"}
 
 
 def cmd_hook(args):
     event, handler = HOOKS[args[0]]
     try:
-        text, loaded = handler(json.load(sys.stdin))
+        result = handler(json.load(sys.stdin))
     except Exception as e:  # a broken hook must never break the session
         print(f"habits {args[0]}: {e}", file=sys.stderr)
         return 0
-    output = {}
-    if text:
-        output["hookSpecificOutput"] = {"hookEventName": event, "additionalContext": text}
-    if loaded and config.load_config()["notify"] == "on":
-        output["systemMessage"] = "habits: loaded " + ", ".join(loaded)
+    output, specific = {}, {}
+    if result.get("context"):
+        specific["additionalContext"] = result["context"]
+    if result.get("title"):
+        specific["sessionTitle"] = result["title"]
+    if specific:
+        output["hookSpecificOutput"] = {"hookEventName": event, **specific}
+    if result.get("loaded") and config.load_config()["notify"] == "on":
+        output["systemMessage"] = "habits: loaded " + ", ".join(result["loaded"])
     if output:
         print(json.dumps(output))
     return 0
@@ -107,7 +112,7 @@ def cmd_status(args):
         for ext, n in gaps:
             print(f"  .{ext:<{width}} {n} file{'' if n == 1 else 's'}")
     print(f"\nConfig ({config.CONFIG_FILE}): autoLsp={cfg['autoLsp']} autoCreate={cfg['autoCreate']} "
-          f"notify={cfg['notify']}")
+          f"notify={cfg['notify']} autoTitle={cfg['autoTitle']}")
     if errors:
         print(f"\n{len(errors)} unit error(s); run `habits validate`.")
     return 0
@@ -214,6 +219,19 @@ def cmd_validate(args):
     return 1 if errors else 0
 
 
+def cmd_title(args):
+    """The hooks see this command and set the title; the command itself only checks the name."""
+    name = " ".join(args).strip()
+    if not name or len(name) > hooks.TITLE_LIMIT or "\n" in name:
+        print(f"usage: habits title <name>  (one line, at most {hooks.TITLE_LIMIT} characters)", file=sys.stderr)
+        return 1
+    if not os.environ.get("CLAUDE_CODE_SESSION_ID"):
+        print("habits title only works inside a Claude Code session.", file=sys.stderr)
+        return 1
+    print(f"Session title will be {name!r} once the user sends their next message.")
+    return 0
+
+
 LAUNCHER = """#!/bin/sh
 # habits CLI launcher, written by `habits install-cli`. Finds the plugin wherever Claude Code keeps it.
 root=$(cat "${XDG_DATA_HOME:-$HOME/.local/share}/habits/root" 2>/dev/null)
@@ -252,7 +270,9 @@ Usage: habits <command> [args]
   load <unit>           print a unit (what Claude gets when it loads)
   validate              check all units for errors
   config                show settings
-  config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off
+  title <name>          name the current Claude Code session (run by Claude)
+  config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off,
+                        autoTitle on|off
   config disable <unit> stop a unit from loading (enable to undo)
   install-cli [DIR]     put a `habits` command in DIR (default ~/.local/bin)
   help                  show this help
@@ -265,7 +285,7 @@ def cmd_help(args):
 
 
 COMMANDS = {"hook": cmd_hook, "status": cmd_status, "units": cmd_units, "load": cmd_load,
-            "config": cmd_config, "validate": cmd_validate, "install-cli": cmd_install_cli,
+            "config": cmd_config, "validate": cmd_validate, "install-cli": cmd_install_cli, "title": cmd_title,
             "help": cmd_help, "--help": cmd_help, "-h": cmd_help}
 
 

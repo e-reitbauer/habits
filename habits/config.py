@@ -11,8 +11,9 @@ DATA_DIR = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "sha
 CONFIG_FILE = CONFIG_DIR / "config.json"
 ROOT_FILE = DATA_DIR / "root"
 
-DEFAULTS = {"autoLsp": "suggest", "autoCreate": "suggest", "notify": "on", "disabled": []}
-CHOICES = {"autoLsp": ("off", "suggest"), "autoCreate": ("off", "suggest"), "notify": ("on", "off")}
+DEFAULTS = {"autoLsp": "suggest", "autoCreate": "suggest", "notify": "on", "autoTitle": "on", "disabled": []}
+CHOICES = {"autoLsp": ("off", "suggest"), "autoCreate": ("off", "suggest"), "notify": ("on", "off"),
+           "autoTitle": ("on", "off")}
 
 
 def load_config():

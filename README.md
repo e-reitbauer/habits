@@ -62,6 +62,10 @@ A unit can also run a `script` whose output becomes part of it. The `openspec` u
 
 When Claude touches a code file type that no unit covers, it offers to write one. When a unit names a language server plugin that isn't installed, it suggests installing it. Both can be switched off.
 
+## Session names
+
+Once the task is clear, Claude names the session with two to four words, such as `fix-login-redirect`, and renames it when the work moves on. The name shows up with your next message. It's set through Claude Code's official hook field, and survives compaction. Switch it off with `habits config set autoTitle off`.
+
 ## The CLI
 
 ```
@@ -70,7 +74,8 @@ habits units                 every unit with its triggers
 habits load <unit>           print a unit, exactly as Claude receives it
 habits validate              check every unit for errors
 habits config                show settings
-habits config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off
+habits config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off, autoTitle on|off
+habits title <name>          name the current session (Claude runs this)
 habits config disable <unit> stop a unit from loading (enable to undo)
 habits install-cli [DIR]     put the habits command in DIR (default ~/.local/bin)
 ```
