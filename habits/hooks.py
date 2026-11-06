@@ -116,7 +116,7 @@ def post_tool_use(payload):
         key = f"ext:{ext}"
         if ext not in NON_CODE and key not in state["suggested"]:
             parts.append(f"habits: no unit covers .{ext} files. If this project actively uses that "
-                         "technology, offer once to create a habits unit for it.")
+                         "technology, offer once to create a habits unit for it (new-unit skill).")
             state["suggested"].append(key)
 
     if parts:
