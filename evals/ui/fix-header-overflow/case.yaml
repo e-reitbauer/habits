@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: fix-header-overflow
+expected_outcome: |
+  The cause is the .nav rule (min-width: 34rem and white-space: nowrap). The fix changes that rule or the header layout with a small change, without hiding the overflow, and without a full design plan.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: asks-how-to-validate
+expected_outcome: |
+  The footer link styles reach at least 24 by 24 CSS px using tokens, and Claude asks how the user wants the change validated (automatic, manual or both).
+context:
+  scaffold_script: place-files.sh

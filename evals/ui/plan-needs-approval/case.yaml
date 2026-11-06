@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: plan-needs-approval
+expected_outcome: |
+  No page is built yet. Claude presents a design plan (brief, structure or flow, state table, component map onto the existing components, layout sketch) and asks for approval.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,45 @@
+/* Design tokens. Every color, font, size, space and radius in the app comes from here. */
+:root {
+  /* Color */
+  --color-ink: #1c2321;
+  --color-ink-muted: #56605c;
+  --color-page: #f4f6f5;
+  --color-surface: #ffffff;
+  --color-line: #d5dcd9;
+  --color-accent: #1f5f8b;
+  --color-accent-strong: #174a6d;
+  --color-on-accent: #ffffff;
+  --color-info: #1f5f8b;
+  --color-info-surface: #e6eff6;
+  --color-danger: #a3302a;
+  --color-danger-surface: #f8e8e7;
+  --color-success: #2c6b45;
+  --color-success-surface: #e5f2ea;
+
+  /* Type */
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+  --leading-tight: 1.2;
+  --leading-body: 1.55;
+
+  /* Space */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --border: 1px solid var(--color-line);
+  --content-width: 68rem;
+}
