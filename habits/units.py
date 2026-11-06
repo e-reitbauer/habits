@@ -44,7 +44,13 @@ class Unit:
         return [t for t in ("paths", "markers", "commands") if getattr(self, t)] or ["manual"]
 
     def matches_path(self, relpath):
-        return any(glob_regex(g).fullmatch(relpath) for g in self.paths)
+        for g in self.paths:
+            try:
+                if glob_regex(g).fullmatch(relpath):
+                    return True
+            except ValueError:  # an invalid glob disables only itself; `habits validate` reports it
+                continue
+        return False
 
     def matches_markers(self, root):
         return any(next(root.glob(m), None) is not None for m in self.markers)
@@ -84,6 +90,27 @@ def command_words(command):
             yield [os.path.basename(words[0]), *words[1:]]
 
 
+def _split_list(inner):
+    """Split `a, "b,c", {x,y}` on top-level commas, honouring quotes and braces."""
+    items, buf, quote, depth = [], "", None, 0
+    for ch in inner:
+        if quote:
+            if ch == quote:
+                quote = None
+            else:
+                buf += ch
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "," and depth == 0:
+            items.append(buf.strip())
+            buf = ""
+        else:
+            depth += (ch == "{") - (ch == "}")
+            buf += ch
+    items.append(buf.strip())
+    return [i for i in items if i]
+
+
 def _scalar(value):
     value = value.strip()
     if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
@@ -112,7 +139,7 @@ def parse_frontmatter(text):
             continue
         key, value = kv.group(1), kv.group(2).strip()
         if value.startswith("[") and value.endswith("]"):
-            meta[key] = [_scalar(v) for v in value[1:-1].split(",") if v.strip()]
+            meta[key] = _split_list(value[1:-1])
         elif value == "":
             meta[key] = []
         else:
