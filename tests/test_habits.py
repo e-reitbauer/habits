@@ -1,5 +1,6 @@
 """Tests for the habits plugin. Run with: python3 -m unittest discover -s tests"""
 
+import importlib.util
 import io
 import json
 import os
@@ -22,7 +23,8 @@ import guard  # noqa: E402
 import hooks  # noqa: E402
 from units import Unit, _split_list, command_words, glob_regex, parse_frontmatter  # noqa: E402
 
-FAKE_AWS_KEY = "AKIAIOSFODNN7EXAMPLE"  # habits:allow-secret (AWS's documented example key)
+ROOT = Path(__file__).resolve().parent.parent
+FAKE_AWS_KEY ="AKIAIOSFODNN7EXAMPLE"  # habits:allow-secret (AWS's documented example key)
 
 
 def git(cwd, *args):
@@ -178,6 +180,60 @@ class Hooks(unittest.TestCase):
         self.assertIn("load the `context` skill", submit(every + 5_000)["context"])
         self.assertNotIn("context", submit(every + 50_000))
         self.assertIn("context", submit(2 * every + 10_000))
+
+    def test_context_size_after_compaction_uses_post_compact_tokens(self):
+        path = Path(transcript(650_000))
+        boundary = {"type": "system", "subtype": "compact_boundary",
+                    "compactMetadata": {"preTokens": 650_000, "postTokens": 36_000}}
+        with path.open("a") as fh:
+            fh.write(json.dumps(boundary) + "\n")
+        self.assertEqual(hooks.context_tokens(str(path)), 36_000)
+
+
+def ui_script(name):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "skills" / "ui" / "scripts" / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class UiTools(unittest.TestCase):
+    contrast = ui_script("contrast")
+    scan = ui_script("scan")
+
+    def test_contrast_matches_known_values(self):
+        c = self.contrast
+        self.assertAlmostEqual(c.ratio(c.parse("#000"), c.parse("#fff")), 21.0, places=2)
+        self.assertAlmostEqual(c.ratio(c.parse("#777777"), c.parse("white")), 4.48, places=2)
+        self.assertAlmostEqual(c.apca(c.parse("#000"), c.parse("#fff")), 106.04, places=1)
+        self.assertAlmostEqual(c.apca(c.parse("#fff"), c.parse("#000")), -107.88, places=1)
+
+    def test_contrast_parses_every_notation(self):
+        c = self.contrast
+        for text in ("#b92548", "#B92548FF", "rgb(185, 37, 72)", "rgba(185 37 72 / 1)", "0xFFB92548"):
+            self.assertEqual(c.parse(text)[:3], (185, 37, 72), text)
+        self.assertEqual(c.composite(c.parse("rgba(0,0,0,.5)"), c.parse("#fff")), (128, 128, 128))
+        with self.assertRaises(ValueError):
+            c.parse("nope")
+
+    def test_contrast_fix_reaches_the_minimum(self):
+        c = self.contrast
+        bg = c.parse("#ffffff")
+        for fg in ("#777777", "#b9a548", "#3a86ff"):
+            fixed = c.fix(c.parse(fg), bg, 4.5)
+            self.assertGreaterEqual(c.ratio(c.parse(fixed), bg), 4.5, fg)
+
+    def test_scan_finds_literals_outside_token_files(self):
+        root = Path(tempfile.mkdtemp(prefix="habits-scan-"))
+        (root / "tokens.css").write_text(":root { --accent: #b92548; }\n")
+        (root / "app.css").write_text("#header { color: var(--accent); }\n"
+                                      ".card { background: #fff; border: 1px solid rgba(0,0,0,.1); }\n"
+                                      ".ok { color: #abc; } /* habits:allow-literal */\n")
+        (root / "page.html").write_text('<a href="#abc">x</a><div class="bg-[#123456]">&#123;</div>\n')
+        found = {(Path(p).name, kind, value) for p, _, kind, value in self.scan.scan([str(root)],
+                                                                                  self.scan.DEFAULT_TOKENS)}
+        self.assertEqual(found, {("app.css", "color", "#fff"), ("app.css", "color", "rgba(0,0,0,.1)"),
+                                 ("page.html", "arbitrary", "bg-[#123456]")})
 
 
 if __name__ == "__main__":

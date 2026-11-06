@@ -121,6 +121,11 @@ def context_tokens(transcript_path):
     except OSError:
         return None
     for line in reversed(lines):
+        if '"compact_boundary"' in line:  # compacted after the last reply: its usage is stale
+            try:
+                return int(json.loads(line)["compactMetadata"]["postTokens"])
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                return None
         if '"usage"' not in line or '"assistant"' not in line:
             continue
         try:
