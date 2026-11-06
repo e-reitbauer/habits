@@ -1,0 +1,13 @@
+{
+  "name": "habits",
+  "owner": {
+    "name": "Erik Reitbauer"
+  },
+  "plugins": [
+    {
+      "name": "habits",
+      "source": "./",
+      "description": "Daily development skills plus granular units for languages, tools and workflows that load only when used."
+    }
+  ]
+}
