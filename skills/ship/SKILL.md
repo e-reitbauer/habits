@@ -58,14 +58,8 @@ No release setup and no version file: skip versioning unless the user asks for i
 
 ## 3. Pick the version (only when bumping manually)
 
-Use SemVer from the Conventional Commits since the last tag:
-- any `!` / `BREAKING CHANGE` → major (before 1.0.0: minor)
-- any `feat` → minor
-- otherwise `fix` / `perf` → patch
-- only `docs` / `chore` / `ci` / `test` / `style` / `refactor` → no release needed
-
-Follow the project's existing tag format (`v1.2.3` vs `1.2.3`) and changelog style. Include
-the proposed version in the plan for approval.
+Load the **versioning** skill: it detects the project's versioning scheme and decides the next
+version. Include the proposed version in the plan for approval.
 
 ## 4. Plan, then local checks
 
@@ -76,12 +70,9 @@ failures before committing; report anything you can't fix.
 ## 5. Commit and push
 
 1. Commit with the **commit** skill.
-2. Pick the target:
-   - Repo merges through PRs (protected default branch, or recent history shows merged PRs:
-     `gh pr list --state merged --limit 5`): work on a feature branch, push, then open the PR
-     with the **pr** skill.
-   - Repo pushes to the default branch directly: push it.
-   - On the default branch with PR-only history: create a branch first.
+2. Pick the target branch with the **branching** skill: it detects the project's branching
+   strategy and says whether this work goes on a feature branch with a PR (opened with the
+   **pr** skill) or straight to the default branch.
 3. Push with `git push -u origin <branch>`. If a tag triggers the release, push the tag only
    after the user confirms.
 
