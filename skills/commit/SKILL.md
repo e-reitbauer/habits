@@ -7,7 +7,8 @@ description: >
   or invokes /commit — including a bare one-word "commit". Never run `git commit` directly; always
   route commit requests through this skill. Splits unrelated changes into separate logical commits
   when appropriate, drafts a message for each, and asks for approval through an AskUserQuestion modal
-  (approve / approve with co-author / reject) before committing.
+  (approve / approve with co-author / reject) before committing, or applies the user's standing
+  choice when they said to always approve one way.
 ---
 
 # Conventional Commit Skill
@@ -34,7 +35,22 @@ Generate a Conventional Commits 1.0.0 message from staged changes, confirm with 
    `git commit -m "$(cat <<'EOF' ... EOF)"`. Append the co-author footer **only** when the
    "Claude co-author" option was chosen (this overrides any global default to always co-author).
 
-Never commit without going through the AskUserQuestion modal in step 5.
+Never commit without going through the AskUserQuestion modal in step 5, unless a standing choice
+applies (below).
+
+## Standing choice
+
+When the user says to always handle approval one way ("always approve", "always add the co-author",
+"don't ask me, just commit"), save that choice to memory: as a project memory when they said it about
+this project, otherwise for all projects. Check memory before step 5. With a standing choice:
+
+- Still show the split plan and every message, then commit with the remembered option instead of the
+  modal, and say so in one line ("Committing without co-author, as you asked").
+- The standing choice only replaces the approval modal. It never makes you commit without being asked
+  to commit, and no message is committed without being shown.
+- Ask with the modal anyway when a commit is unusual: a breaking change, a revert, or files that look
+  unrelated to the task.
+- When the user says to ask again, delete the memory.
 
 ## Commit Message Spec (Conventional Commits 1.0.0)
 
