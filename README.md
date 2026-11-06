@@ -27,7 +27,7 @@ habits needs Python 3 on your PATH and uses only its standard library.
 | `commit` | committing: Conventional Commits, split by concern, approved before it runs |
 | `pr` | opening a pull request: title and body from the branch |
 | `ship` | shipping end to end: checks, commit, version, push, CI, release |
-| `ui` | building or fixing UI, avoiding the generic AI-made look |
+| `ui` | designing and building UI like a designer: research, plan, approval, build from the design system, validate |
 | `hygiene` | creating files, adding build output, committing: keeps the repo clean |
 | `secrets` | touching keys, tokens, `.env` files or CI secrets |
 | `dependencies` | adding, upgrading or removing a dependency |
@@ -35,9 +35,14 @@ habits needs Python 3 on your PATH and uses only its standard library.
 | `versioning` | picking a version: SemVer, CalVer, build numbers, pre-releases, tags |
 | `branching` | branches, merges and branching strategies: trunk-based, GitHub Flow, Git Flow, release branches |
 | `patterns` | structuring code: architecture, layering and when a design pattern earns its place |
+| `research` | before large, ambiguous or hard-to-reverse work: research facts, brainstorm options, ask only what matters |
 | `context` | checking a long session for context rot and recovering from it |
 | `units` | listing or loading units by hand |
 | `new-unit` | writing a new unit or improving one: triggers, content, validation |
+
+The `ui` skill plans before it builds: a brief, the flows, every state, a map of which existing components each part reuses, and a layout sketch. It gets the plan approved (in an OpenSpec project, as the change proposal), builds only from the project's tokens and components, and then validates the result automatically, by hand or both, as you choose. It bundles three tools: a contrast checker that also suggests the nearest passing color, a scanner for hardcoded colors and fonts, and measured checks for a rendered page (overflow, clipped text, small targets, contrast, labels). Its evals live in `evals/ui`.
+
+Where a skill asks you to choose (how to validate a UI change, how to approve a commit), saying "always" makes Claude remember the answer.
 
 **Units** cover everything extra: one small file per language, framework, tool, platform, database, testing practice or workflow.
 

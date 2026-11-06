@@ -2,6 +2,22 @@
 
 All notable changes to habits. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `ui` works like a designer: it learns the design system, researches the subject (through `research`), plans the brief, flows, states, component map and layout, gets approval (as an OpenSpec change where there is one), builds only from existing tokens and components, and asks whether to validate automatically, manually or both. References cover the process, UX rules and the generated-look anti-patterns.
+- `commit` remembers a standing approval choice when the user says to always approve one way.
+
+### Added
+
+- `ui` tools: `contrast.py` (WCAG and APCA contrast, nearest passing color), `scan.py` (hardcoded colors, fonts and arbitrary values) and `page-checks.js` (measured checks on a rendered page).
+- An eval suite for `ui` in `evals/ui`, with a plain-HTML fixture and a script that compares the current skill, v0.2.0 and Anthropic's frontend-design.
+
+### Fixed
+
+- The context size read right after a compaction no longer uses the usage from before it, which triggered a false context rot check.
+
 ## [0.2.0] - 2026-11-06
 
 ### Added
