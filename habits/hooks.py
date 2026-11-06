@@ -1,12 +1,15 @@
 """Hook handlers. Each reads the hook payload and returns a dict with any of:
-context (text to inject), loaded (ids of units it loaded), title (session title to set).
+context (text to inject), loaded (ids of units it loaded), title (session title to set),
+deny (reason to refuse the tool call).
 """
 
+import json
 import os
 import re
 from pathlib import Path
 
 import config
+import guard
 from units import ROOT, command_words, load_units, project_root
 
 # Extensions that never call for a unit of their own
@@ -71,7 +74,7 @@ def session_start(payload):
         title = config.load_state(session).get("title")
         config.reset_state(session)
         if title:
-            config.save_state(session, {"loaded": [], "suggested": [], "title": title})
+            config.save_state(session, {"loaded": {}, "suggested": [], "title": title})
     config.register_root(ROOT)
 
     cfg = config.load_config()
@@ -80,7 +83,7 @@ def session_start(payload):
     marked = [u for u in units if u.markers and u.id not in cfg["disabled"]
               and u.id not in state["loaded"] and u.matches_markers(root)]
     if marked:
-        state["loaded"] += [u.id for u in marked]
+        state["loaded"].update({u.id: 0 for u in marked})
         config.save_state(session, state)
 
     parts = [
@@ -96,15 +99,71 @@ def session_start(payload):
     return {"context": "\n\n".join(parts), "loaded": [u.id for u in marked]}
 
 
+def pre_tool_use(payload):
+    command = (payload.get("tool_input") or {}).get("command")
+    if payload.get("tool_name") != "Bash" or not command or "git" not in command:
+        return {}
+    if config.load_config()["secretGuard"] != "on":
+        return {}
+    reason = guard.check_command(command, payload.get("cwd") or os.getcwd())
+    return {"deny": reason} if reason else {}
+
+
+def context_tokens(transcript_path):
+    """Current context size in tokens, from the usage of the transcript's latest assistant message."""
+    if not transcript_path:
+        return None
+    try:
+        with open(transcript_path, "rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            fh.seek(max(0, fh.tell() - 2_000_000))
+            lines = fh.read().decode("utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for line in reversed(lines):
+        if '"usage"' not in line or '"assistant"' not in line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        usage = (entry.get("message") or {}).get("usage")
+        if entry.get("type") == "assistant" and usage:
+            return sum(usage.get(k) or 0 for k in
+                       ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
+    return None
+
+
+ROT_CHECK = ("habits: this session's context is now about {k}k tokens. Long contexts lose earlier "
+             "instructions and details. Before answering, load the `context` skill and run its check.")
+
+
 def prompt_submit(payload):
     session = payload.get("session_id", "default")
+    cfg = config.load_config()
     state = config.load_state(session)
+    result, changed = {}, False
+
     title = state.get("pendingTitle")
-    if not title or title == state.get("title") or config.load_config()["autoTitle"] != "on":
-        return {}
-    state["title"] = title
-    config.save_state(session, state)
-    return {"title": title}
+    if title and title != state.get("title") and cfg["autoTitle"] == "on":
+        state["title"] = result["title"] = title
+        changed = True
+
+    every = cfg["rotCheckEvery"]
+    tokens = context_tokens(payload.get("transcript_path")) if every else None
+    if tokens is not None:
+        last = state.get("rotCheckAt", 0)
+        if tokens < last:  # the context shrank (compaction): start counting again
+            state["rotCheckAt"] = tokens
+            changed = True
+        elif tokens - last >= every:
+            state["rotCheckAt"] = tokens
+            result["context"] = ROT_CHECK.format(k=tokens // 1000)
+            changed = True
+
+    if changed:
+        config.save_state(session, state)
+    return result
 
 
 def _relpath(file_path, cwd):
@@ -141,10 +200,26 @@ def post_tool_use(payload):
     units, _ = load_units()
     matched = [u for u in units if u.id not in cfg["disabled"] and match(u)]
     fresh = [u for u in matched if u.id not in state["loaded"]]
-    root = project_root(cwd) if fresh else cwd
+    tokens = context_tokens(payload.get("transcript_path")) if matched else None
 
+    # A unit loaded long ago sits far back in a long context and gets followed less: inject it again
+    stale = []
+    if tokens is not None and cfg["refreshTokens"]:
+        for u in matched:
+            if u.id not in state["loaded"]:
+                continue
+            at = state["loaded"][u.id]
+            if at is None or tokens < at:  # unknown position, or the context shrank: restart the count
+                state["loaded"][u.id] = tokens
+            elif tokens - at >= cfg["refreshTokens"]:
+                stale.append(u)
+
+    root = project_root(cwd) if fresh or stale else cwd
     parts = [_block(u, cwd, root) for u in fresh]
-    state["loaded"] += [u.id for u in fresh]
+    parts += [f"habits: refreshing the {u.title} unit, loaded about {(tokens - state['loaded'][u.id]) // 1000}k "
+              f"tokens ago.\n{_block(u, cwd, root)}" for u in stale]
+    for u in fresh + stale:
+        state["loaded"][u.id] = tokens or 0
 
     if cfg["autoLsp"] == "suggest":
         installed = config.installed_plugins()
@@ -166,6 +241,7 @@ def post_tool_use(payload):
 
     if title:
         state["pendingTitle"] = title
-    if parts or title:
+    if parts or title or stale:
         config.save_state(session, state)
-    return {"context": "\n\n".join(parts), "loaded": [u.id for u in fresh]}
+    return {"context": "\n\n".join(parts), "loaded": [u.id for u in fresh],
+            "refreshed": [u.id for u in stale]}

@@ -13,7 +13,8 @@ from units import ROOT, glob_regex, load_units, project_root
 
 HOOKS = {"session-start": ("SessionStart", hooks.session_start),
          "post-tool-use": ("PostToolUse", hooks.post_tool_use),
-         "prompt-submit": ("UserPromptSubmit", hooks.prompt_submit)}
+         "prompt-submit": ("UserPromptSubmit", hooks.prompt_submit),
+         "pre-tool-use": ("PreToolUse", hooks.pre_tool_use)}
 SKIP_DIRS = {".git", "node_modules", "build", "dist", "target", ".gradle", ".idea", ".venv", "__pycache__"}
 
 
@@ -29,10 +30,19 @@ def cmd_hook(args):
         specific["additionalContext"] = result["context"]
     if result.get("title"):
         specific["sessionTitle"] = result["title"]
+    if result.get("deny"):
+        specific["permissionDecision"] = "deny"
+        specific["permissionDecisionReason"] = result["deny"]
     if specific:
         output["hookSpecificOutput"] = {"hookEventName": event, **specific}
-    if result.get("loaded") and config.load_config()["notify"] == "on":
-        output["systemMessage"] = "habits: loaded " + ", ".join(result["loaded"])
+    if config.load_config()["notify"] == "on":
+        notes = []
+        if result.get("loaded"):
+            notes.append("loaded " + ", ".join(result["loaded"]))
+        if result.get("refreshed"):
+            notes.append("refreshed " + ", ".join(result["refreshed"]))
+        if notes:
+            output["systemMessage"] = "habits: " + "; ".join(notes)
     if output:
         print(json.dumps(output))
     return 0
@@ -77,7 +87,7 @@ def cmd_status(args):
         hits = [f for f in files if u.paths and u.matches_path(f)]
         covered.update(hits)
         if hits:
-            note = f"{len(hits)} matching files"
+            note = f"{len(hits)} matching file{'' if len(hits) == 1 else 's'}"
             if u.commands:
                 note += f", or on running {' / '.join(u.commands)}"
             if u.lsp:
@@ -112,7 +122,7 @@ def cmd_status(args):
         for ext, n in gaps:
             print(f"  .{ext:<{width}} {n} file{'' if n == 1 else 's'}")
     print(f"\nConfig ({config.CONFIG_FILE}): autoLsp={cfg['autoLsp']} autoCreate={cfg['autoCreate']} "
-          f"notify={cfg['notify']} autoTitle={cfg['autoTitle']}")
+          f"notify={cfg['notify']} autoTitle={cfg['autoTitle']} secretGuard={cfg['secretGuard']}")
     if errors:
         print(f"\n{len(errors)} unit error(s); run `habits validate`.")
     return 0
@@ -156,13 +166,20 @@ def cmd_config(args):
         return 0
     if action == "set" and len(rest) == 2:
         key, value = rest
-        if key not in config.CHOICES:
-            print(f"unknown key {key!r}; settable: {', '.join(config.CHOICES)}", file=sys.stderr)
+        if key in config.NUMBERS:
+            if not value.isdigit():
+                print(f"{key} must be a whole number of tokens (0 switches it off)", file=sys.stderr)
+                return 1
+            cfg[key] = int(value)
+        elif key in config.CHOICES:
+            if value not in config.CHOICES[key]:
+                print(f"{key} must be one of: {', '.join(config.CHOICES[key])}", file=sys.stderr)
+                return 1
+            cfg[key] = value
+        else:
+            settable = [*config.CHOICES, *config.NUMBERS]
+            print(f"unknown key {key!r}; settable: {', '.join(settable)}", file=sys.stderr)
             return 1
-        if value not in config.CHOICES[key]:
-            print(f"{key} must be one of: {', '.join(config.CHOICES[key])}", file=sys.stderr)
-            return 1
-        cfg[key] = value
     elif action in ("enable", "disable") and len(rest) == 1:
         if rest[0] not in {u.id for u in load_units()[0]}:
             print(f"no unit {rest[0]!r}; see `habits units`", file=sys.stderr)
@@ -272,7 +289,8 @@ Usage: habits <command> [args]
   config                show settings
   title <name>          name the current Claude Code session (run by Claude)
   config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off,
-                        autoTitle on|off
+                        autoTitle on|off, secretGuard on|off,
+                        refreshTokens <n>, rotCheckEvery <n> (tokens, 0 = off)
   config disable <unit> stop a unit from loading (enable to undo)
   install-cli [DIR]     put a `habits` command in DIR (default ~/.local/bin)
   help                  show this help

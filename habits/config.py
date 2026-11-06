@@ -11,9 +11,12 @@ DATA_DIR = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "sha
 CONFIG_FILE = CONFIG_DIR / "config.json"
 ROOT_FILE = DATA_DIR / "root"
 
-DEFAULTS = {"autoLsp": "suggest", "autoCreate": "suggest", "notify": "on", "autoTitle": "on", "disabled": []}
+DEFAULTS = {"autoLsp": "suggest", "autoCreate": "suggest", "notify": "on", "autoTitle": "on",
+            "secretGuard": "on", "refreshTokens": 150000, "rotCheckEvery": 150000, "disabled": []}
+# Token thresholds; 0 switches the behaviour off
+NUMBERS = ("refreshTokens", "rotCheckEvery")
 CHOICES = {"autoLsp": ("off", "suggest"), "autoCreate": ("off", "suggest"), "notify": ("on", "off"),
-           "autoTitle": ("on", "off")}
+           "autoTitle": ("on", "off"), "secretGuard": ("on", "off")}
 
 
 def load_config():
@@ -44,10 +47,16 @@ def _state_file(session_id):
 
 
 def load_state(session_id):
+    """Per-session state. `loaded` maps unit id to the context size (tokens) when it was injected."""
     try:
-        return json.loads(_state_file(session_id).read_text())
+        state = json.loads(_state_file(session_id).read_text())
     except (FileNotFoundError, json.JSONDecodeError):
-        return {"loaded": [], "suggested": []}
+        state = {}
+    loaded = state.get("loaded") or {}
+    # Older state kept a plain list: the load position is unknown (None) until the unit next matches
+    state["loaded"] = {uid: None for uid in loaded} if isinstance(loaded, list) else loaded
+    state.setdefault("suggested", [])
+    return state
 
 
 def save_state(session_id, state):
