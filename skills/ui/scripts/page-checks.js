@@ -332,6 +332,43 @@
     }
   }
 
+  // 13d. Overlapping content: text on other text, or text on an image that isn't a deliberate layer
+  const overlaps2 = [];
+  const textBlocks = all.filter((el) => el.matches('h1, h2, h3, h4, p, li, dt, dd, figcaption, label') && visible(el) && el.innerText.trim() &&
+    !el.parentElement.closest('h1, h2, h3, h4, p, li, dt, dd, figcaption, label'));
+  const letters = (el) => {
+    const r = document.createRange(); r.selectNodeContents(el);
+    const size = parseFloat(getComputedStyle(el).fontSize);
+    // the text box of display type includes much empty space above and below the letters: trim it
+    const trim = size >= 32 ? size * 0.22 : 0;
+    return [...r.getClientRects()].filter((x) => x.width > 0 && x.height > 0)
+      .map((x) => ({ left: x.left, right: x.right, top: x.top + trim, bottom: x.bottom - trim,
+        width: x.width, height: Math.max(1, x.height - 2 * trim) }));
+  };
+  // a real overlap covers a good share of the smaller box; tight display line-height only grazes the next block
+  const hit = (a, b) => {
+    const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return w > 4 && h > 4 && (w * h) / Math.min(a.width * a.height, b.width * b.height) > 0.3;
+  };
+  const boxes = textBlocks.map((el) => ({ el, rects: letters(el) }));
+  for (let i = 0; i < boxes.length && overlaps2.length < LIMIT; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const [A, B] = [boxes[i], boxes[j]];
+      if (A.el.contains(B.el) || B.el.contains(A.el)) continue;
+      if (A.rects.some((a) => B.rects.some((b) => hit(a, b)))) { overlaps2.push(`${name(A.el)} overlaps ${name(B.el)}`); break; }
+    }
+  }
+  for (const img of big) {
+    const layered = img.closest('.layer') || img.closest('[class*="hero"], [class*="opener"]');
+    if (layered) continue;  // a photo with its headline on it on purpose
+    const r = img.getBoundingClientRect();
+    const figure = img.closest('figure');
+    for (const { el, rects } of boxes) {
+      if (figure && figure.contains(el)) continue;  // a credit or caption set into its own photo
+      if (rects.some((t) => hit(t, r)) && !img.contains(el)) { overlaps2.push(`${name(el)} sits on the image ${img.currentSrc.split('/').pop()}`); break; }
+    }
+  }
+
   // 14. Section rhythm: neighbouring sections built the same way (the template look)
   const sections = [...document.querySelectorAll('main > section, main > div, body > section, main > article, body > main > *')]
     .filter((el, i, list) => visible(el) && list.indexOf(el) === i && el.getBoundingClientRect().height > 120);
@@ -439,6 +476,7 @@
     imagesFloating: cap(floating), // neither touching a viewport edge nor on a text axis
     nearBleed: cap(nearBleed), // almost full width but stopping at the margins: the worst of both
     controlsCovered: cap(covered), // links and buttons under something else, or overlapping a positioned decoration
+    contentOverlaps: cap(overlaps2), // text on text, or text on a photo that isn't a deliberate layer (hero or .layer)
     decorationEscapes: cap(escapes), // positioned decorations reaching out of their section: only where the plan says so, never through the nav
     fontsDeclared: [...fonts], // first family of each font stack; check that it actually loads
     colorsUsed: [...colors],

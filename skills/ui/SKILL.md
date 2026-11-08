@@ -183,6 +183,55 @@ and a component map; a new product needs all eight.
 Never copy a component and adjust the copy: two near-copies mean a variant or a component is missing.
 Don't wrap a system component just to restyle it; change it at the source or add a variant.
 
+**Start a new web page's layout from this structure** (Create mode, when the project has no layout
+system of its own). It holds structure only; color, type and spacing come from the direction. It
+makes the common composition mistakes impossible instead of something to catch later: a section
+can't leak a decoration into its neighbours or over the header, and an image can't end up almost
+full width but short of the edges.
+
+```css
+/* every top-level section is a band: one grid with the page margins, 12 named content columns
+   (`col 1` … `col 12`), its own stacking context and a clip */
+.band {
+  display: grid;
+  column-gap: var(--gutter);
+  grid-template-columns:
+    [full-start] minmax(calc(var(--margin) - var(--gutter)), 1fr)
+    [content-start] repeat(12, [col] minmax(0, calc((var(--content-width) - 11 * var(--gutter)) / 12)))
+    [content-end] minmax(calc(var(--margin) - var(--gutter)), 1fr) [full-end];
+  position: relative;
+  isolation: isolate;          /* decorations' z-index stays inside the band */
+  overflow: clip;              /* nothing the band draws escapes it */
+}
+.band > * { grid-column: content; }
+.band--reach { overflow: visible; }   /* the one element the plan lets cross a boundary; still below the header */
+
+/* the header sits above every band; give it a backing when content scrolls under it (references/depth.md) */
+.site-header { position: sticky; top: 0; z-index: 10; }
+
+/* text and media take spans of the 12 columns, or bleed from a column line to an edge */
+.span        { grid-column: col var(--from, 1) / span var(--n, 6); }  /* text 1–5: --from: 1; --n: 5 */
+.bleed       { grid-column: full; }                                   /* edge to edge */
+.bleed-start { grid-column: full-start / col var(--to, 7); }          /* left edge up to (not into) column --to */
+.bleed-end   { grid-column: col var(--from, 7) / full-end; }          /* from column --from to the right edge */
+.layer       { grid-row: 1; }      /* stack in one cell: a bleed photo with its text on top (text after it in the source) */
+:is(.bleed, .bleed-start, .bleed-end) > :is(img, video, picture) { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 700px) {        /* phones: media edge to edge, text in the margins, stacked in source order */
+  .bleed-start, .bleed-end { grid-column: full; }
+  .span { grid-column: content; }
+}
+```
+
+The plan's spans map straight onto these: "text 1–5, photo bleeding right from 7" is a `.span`
+(`--from: 1; --n: 5`) followed by a `.bleed-end` (`--from: 7`) in the same band, and they sit side
+by side without overlapping. Columns of text and media never share cells, except a `.layer` pair on
+purpose (an opener with its headline on the photo, on a scrim). Never place blocks side by side by
+forcing them into one row (`grid-row`) and pushing one over with margins, `calc()` offsets or
+`position: absolute`: that overlaps the moment a value is off. Side by side means each block has
+its own `.span` or bleed. An opener photo is `.bleed`, or a
+half-bleed beside the headline, never a full-width image inside `content`. Decorations are children
+of their band and positioned within it.
+
 **Tokens only.** No literal color, font, size, spacing or radius in feature code. When a needed token
 doesn't exist, don't invent a name and don't hardcode the value: propose adding it to the token
 source (in OpenSpec, as part of the design-system delta) or ask.

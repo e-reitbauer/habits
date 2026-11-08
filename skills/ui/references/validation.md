@@ -29,11 +29,16 @@ not at the code.
      on the other), `sectionRepeats` (neighbours built the same way), `scaleContrast` (5× or more
      somewhere on an expressive page), `nearBleed` (a wide image that stops at the margins),
      `controlsCovered` and `decorationEscapes` (a decoration over the nav or a button, or reaching out
-     of its section). Each finding is one of the weakest points.
+     of its section), `contentOverlaps` (text on text, or on a photo that isn't a deliberate layer).
+     Each finding is one of the weakest points; an overlap is always fixed first.
 3. Fix the two weakest points, render again, answer again. Then a second round.
 
 When nothing can render, review against the plan's numbers instead: for every section, read the CSS
-and confirm the grid lines, sizes and heights it sets are the ones the plan gave it.
+and confirm the grid lines, sizes and heights it sets are the ones the plan gave it. Then search the
+CSS for the patterns that overlap content when no one looks: `grid-row` outside a deliberate
+`.layer` pair, `margin-left`/`margin-right` or `calc()` offsets used to push a block into a column,
+`position: absolute` on text blocks, and any `var(--…)` that is used but never defined. Replace each
+with a column span or bleed from the base structure.
 4. Report what the review changed.
 
 Tips for rendering: lazy images may be blank in full-page screenshots; set them to eager or scroll
