@@ -249,6 +249,19 @@ def cmd_title(args):
     return 0
 
 
+def cmd_statusline(args):
+    """One short line for a Claude Code status line: reads the status line's JSON on stdin."""
+    try:
+        session = json.load(sys.stdin).get("session_id")
+    except (json.JSONDecodeError, AttributeError):
+        session = None
+    session = session or os.environ.get("CLAUDE_CODE_SESSION_ID")
+    if not session:
+        return 0
+    print(f"habits {len(config.load_state(session).get('loaded') or {})}")
+    return 0
+
+
 LAUNCHER = """#!/bin/sh
 # habits CLI launcher, written by `habits install-cli`. Finds the plugin wherever Claude Code keeps it.
 root=$(cat "${XDG_DATA_HOME:-$HOME/.local/share}/habits/root" 2>/dev/null)
@@ -288,6 +301,8 @@ Usage: habits <command> [args]
   validate              check all units for errors
   config                show settings
   title <name>          name the current Claude Code session (run by Claude)
+  statusline            how many units this session has loaded, for a status line script
+                        (reads the status line JSON on stdin)
   config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify on|off,
                         autoTitle on|off, secretGuard on|off,
                         refreshTokens <n>, rotCheckEvery <n> (tokens, 0 = off)
@@ -304,6 +319,7 @@ def cmd_help(args):
 
 COMMANDS = {"hook": cmd_hook, "status": cmd_status, "units": cmd_units, "load": cmd_load,
             "config": cmd_config, "validate": cmd_validate, "install-cli": cmd_install_cli, "title": cmd_title,
+            "statusline": cmd_statusline,
             "help": cmd_help, "--help": cmd_help, "-h": cmd_help}
 
 
