@@ -28,6 +28,7 @@ habits needs Python 3 on your PATH and uses only its standard library.
 | `pr` | opening a pull request: title and body from the branch |
 | `ship` | shipping end to end: checks, commit, version, push, CI, release |
 | `ui` | designing and building UI like a designer: research, plan, approval, build from the design system, validate |
+| `cinematic` | award-level, cinematic sites: storyboarded scroll-driven scenes, three.js and WebGL, fast and accessible |
 | `hygiene` | creating files, adding build output, committing: keeps the repo clean |
 | `secrets` | touching keys, tokens, `.env` files or CI secrets |
 | `dependencies` | adding, upgrading or removing a dependency |
@@ -40,7 +41,7 @@ habits needs Python 3 on your PATH and uses only its standard library.
 | `units` | listing or loading units by hand |
 | `new-unit` | writing a new unit or improving one: triggers, content, validation |
 
-The `ui` skill plans before it builds: a brief, the flows, every state, a map of which existing components each part reuses, and a layout sketch. It gets the plan approved (in an OpenSpec project, as the change proposal), builds only from the project's tokens and components, and then validates the result automatically, by hand or both, as you choose. It bundles three tools: a contrast checker that also suggests the nearest passing color, a scanner for hardcoded colors and fonts, and measured checks for a rendered page (overflow, clipped text, small targets, contrast, labels). Its evals live in `evals/ui`.
+The `ui` skill plans before it builds: a brief, the flows, every state, a map of which existing components each part reuses, a layout sketch, a concept chosen from several, a color system and a motion plan. It gets the plan approved (in an OpenSpec project, as the change proposal), builds only from the project's tokens and components, and then validates the result automatically, by hand or both, as you choose. Whatever you ask for explicitly wins over its guidance. It bundles eight tools: an OKLCH palette generator, a blurred-mesh gradient writer, a contrast checker that also suggests the nearest passing color, a font picker that draws fitting open fonts at random instead of the usual few, an icon fetcher for real icon sets, a background pattern writer, a scanner for hardcoded colors and fonts, and measured checks for a rendered page (overflow, clipped text, small targets, contrast, labels, icon alignment, unreadable sticky bars, broken images). Its evals live in `evals/ui`. The `cinematic` skill builds on it for immersive sites.
 
 Where a skill asks you to choose (how to validate a UI change, how to approve a commit), saying "always" makes Claude remember the answer.
 
@@ -104,6 +105,14 @@ habits config set <key> <v>  autoLsp off|suggest, autoCreate off|suggest, notify
 habits title <name>          name the current session (Claude runs this)
 habits config disable <unit> stop a unit from loading (enable to undo)
 habits install-cli [DIR]     put the habits command in DIR (default ~/.local/bin)
+habits statusline            how many units this session has loaded, for your status line
+```
+
+To show it in Claude Code's status line, pipe the status line's JSON into `habits statusline` from your status line script. It prints `habits 3`:
+
+```sh
+input=$(cat)
+habits_text=$(printf '%s' "$input" | habits statusline 2>/dev/null)
 ```
 
 Settings live in `~/.config/habits/config.json`, and per-session state in `~/.cache/habits/`.
