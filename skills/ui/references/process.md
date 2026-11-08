@@ -54,13 +54,29 @@ Then one line: why this hierarchy (what the user must see first, and why).
 
 **Direction** (Create mode; see `creativity.md`)
 ```
+World:      seven artifacts, systems, places or rituals of the subject, each with its visual trait
+Ruts:       the category default, and its predictable opposite
+Reference:  the one primary real-world reference and the three traits taken from it;
+            secondary references and the one detail each contributes
+Card:       the direction.py seed and the card kept (values rejected, with the brief's reason)
 Concepts:   five one-liners from obvious to unusual, each with how typical it is; the pick and why
 Concept:    the chosen one, in one sentence
-Colors:     4-6 named values with roles (ink, surface, accent, ...), contrast-checked
-Type:       families and roles, scale, weights
-Layout:     grid, alignment (left / centered / asymmetric), density
+Scene:      one sentence of physical scene (who, where, under what light) and the light or dark ground it implies
+Colors:     the color strategy; 4-6 named values with roles (ink, surface, field, accent, ...) and
+            where each covers the page, contrast-checked
+Type:       voice tags; the fonts.py candidates considered; families and roles, scale, weights
+Device:     the artifact it comes from, its kind, its large instance and its echoes (at least three places)
+Objects:    each object the page shows without a photo, and the rung of objects.md that makes it
+Images:     the photo plan: role, ratio, pattern, focal point, section (imagery.md)
+Icons:      the set and weight matched to the type, where icons appear; or none
+Depth:      what floats, shadow levels, how bars over content stay readable
 Signature:  the structural move and the signature interaction that express the concept
 From:       which fact about the subject each choice comes from
+```
+
+**Sections** (the page as a sequence, each framed by numbers; see `composition.md`)
+```
+| # | Section | Layout pattern | Spans (text / media, bleed) | Lead and its size | Space and its job | Height | What changes from the previous one |
 ```
 
 **Motion** (see `motion.md`)
@@ -75,6 +91,11 @@ Reduced:    what remains under prefers-reduced-motion
 **Plan check**
 - For each choice in the direction and layout: would I have made it for any similar brief? If yes,
   either justify it from the subject or replace it, and say what changed.
+- The memory, name and rerun tests in `creativity.md`. Could someone guess this direction from the
+  category alone, or from the category plus "avoid the AI look"? Then rework it.
+- Does the plan match the anti-slop look (`anti-patterns.md`, number 6): pale neutral page, one
+  accent, every section split in two, hairlines, no device? Then change the color strategy, the
+  section sequence or the device.
 - Run the UX checklist in `ux.md` over the flow and the state table.
 - Count the primary actions per screen: exactly one.
 

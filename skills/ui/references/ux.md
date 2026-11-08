@@ -80,7 +80,8 @@ the plan check and the critique.
   state lives in the URL so refresh and sharing work.
 - Phones: 3 to 5 top-level destinations in a bottom bar; frequent actions within thumb reach; touch
   targets at least 44×44 pt (iOS) or 48×48 dp (Android).
-- Every gesture has a visible, tappable alternative (WCAG 2.5.7).
+- Every path-based or multi-finger gesture has a single-pointer alternative (WCAG 2.5.1), and every
+  drag has a tap or click alternative (WCAG 2.5.7).
 - Help sits in the same place on every screen (WCAG 3.2.6).
 
 ## Lists, tables and data

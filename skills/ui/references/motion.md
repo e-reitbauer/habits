@@ -54,8 +54,8 @@ Design each one deliberately with Saffer's four parts:
 
 Then give the product **one or two signature micro-interactions** that come from the concept (see
 `creativity.md`): the way its main action confirms, the way its key object moves. That is where a
-product becomes recognizable. A booking app might drop the chosen slot into a ticket; a climbing gym
-site might mark a route as sent with a chalk stroke.
+product becomes recognizable. A booking app might drop the chosen slot into a ticket; a library site
+might stamp the due date onto a borrowed book.
 
 ## Choreography
 
