@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: product-story-3d
+expected_outcome: |
+  A storyboard (scenes from establishing shot to a peak and a resolution, with camera language) comes before code; the 3D is built from the subject (keys, switches, the keyboard), not generic primitives; content lives in HTML; performance and reduced-motion and no-WebGL fallbacks are handled.

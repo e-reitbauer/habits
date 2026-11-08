@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 import os
+import random
 import subprocess
 import sys
 import tempfile
@@ -190,6 +191,25 @@ class Hooks(unittest.TestCase):
         self.assertEqual(hooks.context_tokens(str(path)), 36_000)
 
 
+class StatusLine(unittest.TestCase):
+    def run_statusline(self, payload, *args):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            stdin, sys.stdin = sys.stdin, io.StringIO(json.dumps(payload))
+            try:
+                cli.cmd_statusline(list(args))
+            finally:
+                sys.stdin = stdin
+        return out.getvalue().strip()
+
+    def test_counts_loaded_units(self):
+        config.save_state("sl", {"loaded": {"kotlin": 1, "gradle": 2, "android": 3, "openspec": 4}})
+        self.assertEqual(self.run_statusline({"session_id": "sl"}), "habits 4")
+
+    def test_counts_zero_without_units(self):
+        self.assertEqual(self.run_statusline({"session_id": "nothing-loaded"}), "habits 0")
+
+
 def ui_script(name):
     spec = importlib.util.spec_from_file_location(name, ROOT / "skills" / "ui" / "scripts" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
@@ -223,6 +243,40 @@ class UiTools(unittest.TestCase):
             fixed = c.fix(c.parse(fg), bg, 4.5)
             self.assertGreaterEqual(c.ratio(c.parse(fixed), bg), 4.5, fg)
 
+    def test_palette_text_steps_reach_contrast_on_subtle_background(self):
+        palette = ui_script("palette")
+        for seed in ("#b92548", "#e8a33d", "#1f5f8b", "#ffff00", "#101010"):
+            for dark in (False, True):
+                rgbs = [palette.to_rgb(*s) for s in palette.scale(self.contrast.parse(seed), dark=dark)]
+                self.assertGreaterEqual(self.contrast.ratio(rgbs[10], rgbs[1]), 4.5, (seed, dark))
+                self.assertGreaterEqual(self.contrast.ratio(rgbs[11], rgbs[1]), 7.0, (seed, dark))
+
+    def test_palette_neutral_is_tinted_but_quiet(self):
+        palette = ui_script("palette")
+        steps = palette.scale(self.contrast.parse("#1f5f8b"), neutral=True)
+        self.assertTrue(all(0.002 < c <= 0.02 for _, c, _ in steps))
+
+    def test_palette_flags_brown_and_olive(self):
+        palette = ui_script("palette")
+        parse = self.contrast.parse
+        self.assertTrue(palette.reads_muddy(*palette.to_oklch(parse("#6e5a3a"))))
+        self.assertTrue(palette.reads_muddy(*palette.to_oklch(parse("#271e0e"))))
+        self.assertFalse(palette.reads_muddy(*palette.to_oklch(parse("#e0a034"))))
+        self.assertFalse(palette.reads_muddy(*palette.to_oklch(parse("#b92548"))))
+
+    def test_palette_dark_warm_steps_turn_toward_red(self):
+        palette = ui_script("palette")
+        steps = palette.scale(self.contrast.parse("#e8a33d"))
+        self.assertLess(steps[10][2], steps[8][2])
+
+    def test_gradient_interpolates_in_oklab_and_warns_on_far_hues(self):
+        gradient = ui_script("gradient")
+        css = gradient.css(["#e8a33d", "#d9603b"], "#2a1d0b", "mesh", 90, 0.06, False)
+        self.assertIn("in oklab", css)
+        self.assertIn("feTurbulence", css)
+        far = gradient.hue_gap(self.contrast.parse("#1f5f8b"), self.contrast.parse("#e8a33d"))
+        self.assertGreater(far, 90)
+
     def test_scan_finds_literals_outside_token_files(self):
         root = Path(tempfile.mkdtemp(prefix="habits-scan-"))
         (root / "tokens.css").write_text(":root { --accent: #b92548; }\n")
@@ -234,6 +288,74 @@ class UiTools(unittest.TestCase):
                                                                                   self.scan.DEFAULT_TOKENS)}
         self.assertEqual(found, {("app.css", "color", "#fff"), ("app.css", "color", "rgba(0,0,0,.1)"),
                                  ("page.html", "arbitrary", "bg-[#123456]")})
+
+    def test_fonts_draw_matches_the_voice_and_leaves_out_overused_fonts(self):
+        fonts = ui_script("fonts")
+        catalog = fonts.load()
+        picks, _ = fonts.sample(catalog, ["serif", "warm"], "display", 6, random.Random(1), False)
+        self.assertTrue(picks)
+        for f in picks:
+            self.assertIn("d", f["roles"])
+            self.assertTrue(f["tags"] & {"serif", "warm"})
+            self.assertFalse(fonts.common(f), f["name"])
+        again, _ = fonts.sample(catalog, ["serif", "warm"], "display", 6, random.Random(1), False)
+        self.assertEqual([f["name"] for f in picks], [f["name"] for f in again])
+
+    def test_fonts_links_and_check(self):
+        fonts = ui_script("fonts")
+        by_name = {f["name"]: f for f in fonts.load()}
+        self.assertEqual(fonts.link(by_name["Literata"]),
+                         "https://fonts.googleapis.com/css2?family=Literata:wght@200..900&display=swap")
+        self.assertEqual(fonts.link(by_name["Alfa Slab One"]),
+                         "https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap")
+        self.assertTrue(fonts.link(by_name["Gambetta"]).startswith("https://api.fontshare.com/v2/css?f[]=gambetta@"))
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(fonts.main(["--check", "Inter", "Fraunces", "Literata"]), 1)
+        self.assertIn("Literata                   ok", out.getvalue())
+
+    def test_pattern_writes_a_token_colored_mask(self):
+        pattern = ui_script("pattern")
+        for kind in ("dots", "grid", "diagonal", "cross", "waves", "zigzag", "checker", "rings", "hatch", "contour"):
+            css = pattern.css(kind, 24, 1.5, "var(--pattern)", 0.12, "radial", "p", 7)
+            self.assertIn("background: var(--pattern)", css, kind)
+            self.assertIn('mask: url("data:image/svg+xml,', css, kind)
+            self.assertNotIn("#", css.split("data:")[1].split('")')[0], kind)  # '#' would cut the data URI
+            self.assertIn("mask-composite: intersect", css, kind)
+        self.assertEqual(pattern.css("contour", 24, 1, "red", 0.1, None, "p", 3),
+                         pattern.css("contour", 24, 1, "red", 0.1, None, "p", 3))
+
+    def test_icons_refuses_names_without_a_set(self):
+        icons = ui_script("icons")
+        with self.assertRaises(SystemExit):
+            icons.svg("sailboat")
+
+    def test_direction_deals_every_axis_repeatably_from_a_seed(self):
+        direction = ui_script("direction")
+        card = direction.deal(random.Random(5), "expressive")
+        self.assertEqual(set(card), set(direction.AXES))
+        self.assertEqual(card, direction.deal(random.Random(5), "expressive"))
+        for axis, (value, meaning, risk) in card.items():
+            self.assertIn((value, meaning, risk), direction.AXES[axis])
+
+    def test_direction_product_cards_stay_restrained_or_committed(self):
+        direction = ui_script("direction")
+        for seed in range(30):
+            card = direction.deal(random.Random(seed), "product")
+            self.assertEqual(set(card), set(direction.PRODUCT_AXES))
+            self.assertIn(card["color strategy"][0], {"restrained", "committed"})
+
+    def test_direction_cinematic_cards_leave_layout_to_the_storyboard(self):
+        direction = ui_script("direction")
+        card = direction.deal(random.Random(3), "cinematic")
+        self.assertEqual(set(card), set(direction.CINEMATIC_AXES))
+        self.assertNotIn("layout spine", card)
+
+    def test_direction_cards_name_no_fonts_or_hex_colors(self):
+        direction = ui_script("direction")
+        fonts = {f["name"] for f in ui_script("fonts").load()}
+        text = repr(direction.AXES)
+        self.assertNotRegex(text, r"#[0-9a-fA-F]{3,6}\b")
+        self.assertFalse([f for f in fonts if f"'{f}'" in text or f" {f} " in text])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: scrollytelling-light-medium
+expected_outcome: |
+  Each scene uses the lightest medium that achieves it (CSS scroll-driven animations, View Transitions, SVG, images) rather than WebGL by default; scroll stays native; scroll-driven CSS is feature-gated so the page is complete without it; reduced motion and mobile are designed.

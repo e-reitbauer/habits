@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: greenfield-bakery
+expected_outcome: |
+  A plan with a concept, palette, type, layout and motion comes before code; the page is composed on a grid, avoids the generated look, and its colors are a system without muddy browns or olives used as text or lines.

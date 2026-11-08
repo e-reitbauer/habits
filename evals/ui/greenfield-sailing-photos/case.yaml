@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: greenfield-sailing-photos
+expected_outcome: |
+  A plan comes before code and covers type, icons, motif, images and depth as well as palette and layout; the page builds on the provided photos at varied scale with correct alt text and credits, uses fonts drawn for the concept instead of the usual defaults, icons from one library set (or none), a decorative motif from sailing, readable bars over content, and marks aligned on the text.
+context:
+  scaffold_script: place-files.sh
