@@ -42,7 +42,7 @@ pmrem.dispose();
 
 // … build the objects (modelling.md), with their printed detail …
 
-const subject = new THREE.Group();                                 // the hero object(s); framing measures this
+const subject = new THREE.Group();                                 // the hero object(s), not the set around them; framing measures this
 scene.add(subject);
 // … add the object's meshes to `subject` …
 
@@ -197,6 +197,14 @@ const pointer = new THREE.Vector2(), drift = new THREE.Vector2(), offset = new T
 addEventListener('pointermove', (e) => pointer.set(e.clientX / innerWidth - 0.5, e.clientY / innerHeight - 0.5),
   { passive: true, signal: listeners.signal });
 
+// Compile before the first scroll, or each set stutters the first time it comes into view. compile
+// skips hidden objects: show every set once, compile, upload the textures, then hide what the first
+// shot doesn't need.
+// sets.forEach((s) => { s.visible = true; });
+await renderer.compileAsync(scene, camera);
+scene.traverse((o) => [].concat(o.material ?? []).forEach((m) => m.map && renderer.initTexture(m.map)));
+// sets.forEach((s, i) => { s.visible = i === 0; });
+
 const timer = new THREE.Timer();                                   // Clock is deprecated
 timer.connect(document);                                           // pauses while the tab is hidden
 renderer.setAnimationLoop((time) => {
@@ -274,9 +282,13 @@ Notes:
 - The pose is the object's part in the story: what opens, lifts, turns over or comes apart in each
   shot, with its own amount per part. An on/off switch for one effect gives every story the same
   single trick.
-- Sound can be a signature moment (a keystroke, a click, a hum on the peak): synthesise it with Web
-  Audio (an oscillator or filtered noise through a short gain envelope) so it weighs nothing, create
-  the `AudioContext` on the first press of a visible toggle, start muted, and remember the choice.
+- Sound only when the user asks for it or the subject is sound: synthesise it with Web Audio (an
+  oscillator or filtered noise through a short gain envelope) so it weighs nothing, create the
+  `AudioContext` on the first press of a visible toggle, start muted, and remember the choice.
+- A journey (a train, a car, a walk through a place): the route is a `CatmullRomCurve3`, and what
+  travels sits on it by `getPointAt` and `getTangentAt`, each car or part at its own distance along
+  it, so it bends instead of kinking. Keep the camera's curves above; a straight lerp between shots
+  turns sharply at every one.
 - Use `WebGLRenderer` by default. `WebGPURenderer` (from `three/webgpu`, with TSL node materials and a
   WebGL2 fallback) pays off for compute-heavy scenes or very many draw calls; most addons and
   examples are still WebGL-first.

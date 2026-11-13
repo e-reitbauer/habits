@@ -266,7 +266,8 @@ even when they said they will check the result themselves, and regardless of the
 - Fix the weakest two things, render again, and repeat once more. Most of the quality comes from
   these two rounds.
 - Last, hold the page against the template chrome in `references/anti-patterns.md` (labels above
-  headings, decorative numbering, meta strings joined with dots, identical card grids) and move
+  headings, italic halves in headings, decorative numbering, meta strings joined with dots,
+  identical card grids) and move
   that information into the heading, the text or a caption. This pass removes tells; it never
   makes a page good, so it comes after the two rounds, not instead of them.
 - If nothing can render (a sandbox without a browser), say so plainly, review the code against the

@@ -75,6 +75,6 @@ carried by the concept, is enough.
   Manrope, Instrument Serif, Fraunces and Playfair Display as the "designed" reflex.
   `fonts.py --check <font …>` names them. Each is fine when the user or the design system chose it.
 - The italic serif headline as a shortcut to "editorial"; one italic or accent-colored word in a
-  headline.
+  headline; every heading ending in an italic half.
 - Monospace for labels by reflex; all-caps paragraphs; letter-spaced lowercase; faux bold and
   italics; more than two families without a reason.

@@ -44,34 +44,47 @@ async () => {
     geometries: three.renderer.info.memory.geometries, textures: three.renderer.info.memory.textures,
   } : null;
 
-  // 4. Framing: does the object cover text? Needs window.__three.subject (skeleton.md, ?debug)
+  // 4. Framing: does the object cover text? Needs window.__three.subject (skeleton.md, ?debug): the
+  // hero object, not the set around it. Measured per mesh, from the corners in front of the camera,
+  // so a long subject the camera rides beside (a train) counts only where it is on screen.
   const textCovered = [], cropped = [];
-  const objectBox = () => {
-    if (!three?.subject || !three.THREE) return null;
-    const { THREE } = three;
-    const box = new THREE.Box3().setFromObject(three.subject);
-    if (box.isEmpty()) return null;
+  const screenRect = (box) => {
+    const { THREE } = three, cam = three.camera;
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
     for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
-      const p = new THREE.Vector3(x, y, z).project(three.camera);
-      const sx = (p.x + 1) / 2 * innerWidth, sy = (1 - p.y) / 2 * innerHeight;
+      const v = new THREE.Vector3(x, y, z);
+      if (v.clone().applyMatrix4(cam.matrixWorldInverse).z > -cam.near) continue;  // behind the camera
+      const p = v.project(cam), sx = (p.x + 1) / 2 * innerWidth, sy = (1 - p.y) / 2 * innerHeight;
       x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
     }
-    return { x0, y0, x1, y1 };
+    return x1 > x0 ? { x0, y0, x1, y1 } : null;
+  };
+  const objectRects = () => {
+    if (!three?.subject || !three.THREE) return [];
+    const rects = [];
+    three.subject.traverseVisible((m) => { const r = m.isMesh && screenRect(new three.THREE.Box3().setFromObject(m)); if (r) rects.push(r); });
+    return rects;
   };
   const checkFraming = (at) => {
-    const o = objectBox();
+    if (!three?.subject || !three.THREE) return;
+    const box = new three.THREE.Box3().setFromObject(three.subject), o = !box.isEmpty() && screenRect(box);
     if (!o) return;
-    const area = (o.x1 - o.x0) * (o.y1 - o.y0);
-    const inside = Math.max(0, Math.min(o.x1, innerWidth) - Math.max(o.x0, 0)) * Math.max(0, Math.min(o.y1, innerHeight) - Math.max(o.y0, 0));
-    if (area > 0 && 1 - inside / area > 0.05) cropped.push(`${at}: ${Math.round((1 - inside / area) * 100)}% of the object's screen area is outside the frame`);
+    // a crop is measured on the whole object; with the camera inside its box (a long subject) it can't be
+    if (!box.containsPoint(three.camera.position)) {
+      const area = (o.x1 - o.x0) * (o.y1 - o.y0);
+      const inside = Math.max(0, Math.min(o.x1, innerWidth) - Math.max(o.x0, 0)) * Math.max(0, Math.min(o.y1, innerHeight) - Math.max(o.y0, 0));
+      if (area > 0 && 1 - inside / area > 0.05) cropped.push(`${at}: ${Math.round((1 - inside / area) * 100)}% of the object's screen area is outside the frame`);
+    }
+    const rects = objectRects();
     for (const el of document.querySelectorAll('h1, h2, h3, p, li, dt, dd, figcaption, a, button')) {
       const r = el.getBoundingClientRect();
       if (!el.innerText?.trim() || r.bottom < 0 || r.top > innerHeight || r.width * r.height === 0) continue;
       const s = getComputedStyle(el);
       if (+s.opacity === 0 || s.visibility === 'hidden') continue;
-      const w = Math.min(r.right, o.x1) - Math.max(r.left, o.x0), h = Math.min(r.bottom, o.y1) - Math.max(r.top, o.y0);
-      const share = w > 0 && h > 0 ? (w * h) / (r.width * r.height) : 0;
+      const share = Math.max(0, ...rects.map((q) => {
+        const w = Math.min(r.right, q.x1) - Math.max(r.left, q.x0), h = Math.min(r.bottom, q.y1) - Math.max(r.top, q.y0);
+        return w > 0 && h > 0 ? (w * h) / (r.width * r.height) : 0;
+      }));
       if (share > 0.15) textCovered.push(`${at}: "${el.innerText.trim().slice(0, 40)}" ${Math.round(share * 100)}% inside the object's screen area`);
     }
   };
@@ -101,10 +114,10 @@ async () => {
     if (!three?.renderer || !three.scene || !three.camera) return;
     const gl = three.renderer.getContext();
     three.renderer.render(three.scene, three.camera); // draw now, so the buffer can be read in this task (no post-processing)
-    const o = objectBox(), px = new Uint8Array(4), sum = [0, 0, 0], points = [];
+    const rects = objectRects(), px = new Uint8Array(4), sum = [0, 0, 0], points = [];
     for (let gy = 0.5; gy < 8; gy++) for (let gx = 0.5; gx < 8; gx++) {
       const sx = gx / 8 * innerWidth, sy = gy / 8 * innerHeight;
-      if (o && sx > o.x0 && sx < o.x1 && sy > o.y0 && sy < o.y1) continue; // the ground only, not the object
+      if (rects.some((o) => sx > o.x0 && sx < o.x1 && sy > o.y0 && sy < o.y1)) continue; // the ground only, not the object
       gl.readPixels(Math.floor(gx / 8 * gl.drawingBufferWidth), Math.floor((1 - gy / 8) * gl.drawingBufferHeight), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       if (px[3] < 250) continue;
       for (let c = 0; c < 3; c++) sum[c] += px[c];
@@ -136,6 +149,104 @@ async () => {
     s.lowestElevation = Math.min(s.lowestElevation, Math.round(elevation));
     if (sphere?.radius) s.frustumOverObject = Math.max(s.frustumOverObject, +(size / (2 * sphere.radius)).toFixed(1));
     shadows.set(lightNode, s);
+  };
+
+  // 4d. Text over the scene, from pixels: the canvas behind each block of text that has no surface of
+  // its own, read right after a render. Worst contrast (10th percentile of the pixels behind it) and
+  // how busy the ground is there. Post-processing passes are not in this render.
+  const paint = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  const rgba = (c) => { paint.clearRect(0, 0, 1, 1); paint.fillStyle = c; paint.fillRect(0, 0, 1, 1); const d = paint.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+  const lum = ([r, g, b]) => [r, g, b].map((c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; })
+    .reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const over = (top, a, bottom) => bottom.map((c, i) => top[i] * a + c * (1 - a));
+  const illegible = new Map(), unmeasured = new Set();
+  const checkText = (at) => {
+    if (!three?.renderer || !three.scene || !three.camera) return;
+    const canvas = three.renderer.domElement, cr = canvas.getBoundingClientRect(), gl = three.renderer.getContext();
+    const ground = cssGround(), sx = gl.drawingBufferWidth / cr.width, sy = gl.drawingBufferHeight / cr.height;
+    three.renderer.render(three.scene, three.camera);                // read in the same task as the render
+    for (const el of document.querySelectorAll('body *')) {
+      if (el.closest('script, style, noscript, template, svg') || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+      const range = document.createRange(); range.selectNodeContents(el);
+      const r = range.getBoundingClientRect();
+      const x0 = Math.max(r.left, cr.left, 0), x1 = Math.min(r.right, cr.right, innerWidth);
+      const y0 = Math.max(r.top, cr.top, 0), y1 = Math.min(r.bottom, cr.bottom, innerHeight);
+      if (x1 - x0 < 4 || y1 - y0 < 4) continue;
+      // what lies between the text and the canvas: an opaque surface means it is backed (page-checks.js
+      // measures it); translucent colors are layered over the pixels; a gradient or image can't be told
+      let opacity = 1, backed = false; const layers = [];
+      for (let node = el; node && !node.contains(canvas); node = node.parentElement) {
+        const s = getComputedStyle(node);
+        opacity *= +s.opacity;
+        if (s.visibility === 'hidden' || s.display === 'none') opacity = 0;
+        if (s.backgroundImage !== 'none') { backed = null; break; }
+        const bg = rgba(s.backgroundColor);
+        if (bg[3] >= 0.95) { backed = true; break; }
+        if (bg[3] > 0) layers.unshift(bg);                           // outermost first: painted first
+      }
+      const text = el.innerText.trim().replace(/\s+/g, ' ').slice(0, 40);
+      if (backed === null) { unmeasured.add(`"${text}"`); continue; }
+      if (backed || opacity < 0.5) continue;                         // on a surface, or mid-fade
+      const s = getComputedStyle(el), ink = rgba(s.color), size = parseFloat(s.fontSize);
+      const need = size >= 24 || (size >= 18.66 && +s.fontWeight >= 700) ? 3 : 4.5;
+      const w = Math.round((x1 - x0) * sx), h = Math.round((y1 - y0) * sy);
+      const px = new Uint8Array(w * h * 4);
+      gl.readPixels(Math.round((x0 - cr.left) * sx), Math.round((cr.bottom - y1) * sy), w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 4000))), ratios = [], lums = [];
+      for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) {
+        const i = (y * w + x) * 4, a = px[i + 3] / 255;
+        let bg = [0, 1, 2].map((c) => px[i + c] + ground[c] * (1 - a)); // premultiplied over the CSS ground
+        for (const l of layers) bg = over(l, l[3], bg);
+        const fg = over(ink, ink[3] * opacity, bg), [lf, lb] = [lum(fg), lum(bg)];
+        ratios.push((Math.max(lf, lb) + 0.05) / (Math.min(lf, lb) + 0.05));
+        lums.push(lb);
+      }
+      ratios.sort((p, q) => p - q); lums.sort((p, q) => p - q);
+      const worst = ratios[Math.floor(ratios.length * 0.1)], spread = lums[Math.floor(lums.length * 0.9)] - lums[Math.floor(lums.length * 0.1)];
+      if (worst < need && worst < (illegible.get(el)?.worst ?? Infinity))
+        illegible.set(el, { worst, line: `${at}: "${text}" ${worst.toFixed(1)}:1, needs ${need}${spread > 0.25 ? ', busy ground' : ''}` });
+    }
+  };
+
+  // 4e. Camera clearance, also while the camera travels between shots: inside or against scenery
+  // (rays into the view that first meet the back of a one-sided mesh, or anything within twice the
+  // near plane), or scenery between the camera and the subject
+  const blocked = [];
+  const checkCamera = (at) => {
+    if (!three?.THREE || !three.scene || !three.camera) return;
+    const { THREE } = three, cam = three.camera, origin = cam.getWorldPosition(new THREE.Vector3()), ray = new THREE.Raycaster();
+    const meshes = [];
+    // solid scenery only: glows, decals and light pools are one-sided transparent planes on purpose
+    three.scene.traverseVisible((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && !o.material.transparent) meshes.push(o); });
+    const sides = meshes.map((m) => m.material.side);
+    meshes.forEach((m) => { m.material.side = THREE.DoubleSide; });  // restored below, before any render
+    const first = (dir, far = Infinity) => { ray.set(origin, dir.normalize()); ray.far = far; return ray.intersectObjects(meshes, false)[0]; };
+    const label = (o, id) => {
+      for (let n = o; n; n = n.parent) if (n.name) return n.name;
+      return `an unnamed ${o.geometry?.type ?? 'mesh'}${id === undefined ? '' : `, instance ${id}`}`;
+    };
+    const backFace = (hit) => {
+      if (!hit?.face || sides[meshes.indexOf(hit.object)] !== THREE.FrontSide) return false;
+      const m = hit.object.matrixWorld.clone();
+      if (hit.instanceId !== undefined) m.multiply(hit.object.getMatrixAt(hit.instanceId, new THREE.Matrix4()));
+      return hit.face.normal.clone().transformDirection(m).dot(ray.ray.direction) > 0;
+    };
+    const view = [[0, 0], [-0.9, -0.9], [0.9, -0.9], [-0.9, 0.9], [0.9, 0.9]]
+      .map(([x, y]) => new THREE.Vector3(x, y, 0.5).unproject(cam).sub(origin));
+    const axes = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].map((d) => new THREE.Vector3(...d));
+    let found = null;
+    for (const d of view) { const h = first(d); if (backFace(h)) { found = `inside or behind ${label(h.object, h.instanceId)} (sees its back faces)`; break; } }
+    const touch = !found && [...view, ...axes].map((d) => first(d, cam.near * 2)).find(Boolean);
+    if (touch) found = `touching ${label(touch.object, touch.instanceId)}`;
+    if (!found && three.subject) {
+      const sphere = new THREE.Box3().setFromObject(three.subject).getBoundingSphere(new THREE.Sphere());
+      const toHero = sphere.center.clone().sub(origin), d = toHero.length() - sphere.radius;
+      const hit = d > 0 && first(toHero, d);
+      let inHero = false; hit?.object?.traverseAncestors((a) => { inHero ||= a === three.subject; });
+      if (hit && !inHero) found = `${label(hit.object, hit.instanceId)} stands between the camera and the subject`;
+    }
+    meshes.forEach((m, i) => { m.material.side = sides[i]; });
+    if (found) blocked.push(`${at}: ${found}`);
   };
 
   // 5. Long tasks and frame times while scrolling through the whole page
@@ -174,7 +285,12 @@ async () => {
     if (i % 12 === 0) {
       await settle();
       checkFraming(at);
+      checkText(at);
+      checkCamera(at);
       if (i % 24 === 0) sampleMood(at);
+      last = await nextFrame();
+    } else if (i % 3 === 0) {
+      checkCamera(at);                                               // mid-travel, where clipping usually happens
       last = await nextFrame();
     }
   }
@@ -197,6 +313,12 @@ async () => {
     : 'not measured: expose { THREE, camera, subject } as window.__three under ?debug (skeleton.md)';
   // a close-up crops on purpose; anywhere else a crop is an accident of `fill` or `shift`
   if (three?.subject) report.objectCropped = { count: cropped.length, items: cropped.slice(0, 15) };
+  if (three?.renderer) {
+    const worst = [...illegible.values()].sort((p, q) => p.worst - q.worst);
+    report.textLegibility = { count: worst.length, items: worst.slice(0, 15).map((x) => x.line),
+      notMeasured: [...unmeasured].slice(0, 8) }; // on a gradient or image scrim: check those in a screenshot
+    report.cameraClearance = { count: blocked.length, items: [...new Set(blocked)].slice(0, 15) };
+  }
   if (moods.length) {
     const labs = moods.map((m) => oklab(m.ground));
     const dist = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));

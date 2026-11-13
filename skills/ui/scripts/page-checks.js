@@ -147,6 +147,9 @@
     const ratio = parseFloat(getComputedStyle(prev).fontSize) / parseFloat(getComputedStyle(h).fontSize);
     if (gap >= -2 && gap < 64 && ratio < 0.6) eyebrows.push(`${name(prev)} above ${name(h)}`);
   }
+  // Headings with an italic part in an upright heading (`Night falls <em>over the Alps</em>`)
+  const italicParts = headings.filter((h) => /H[1-3]/.test(h.tagName) && getComputedStyle(h).fontStyle === 'normal' &&
+    [...h.querySelectorAll('*')].some((c) => getComputedStyle(c).fontStyle !== 'normal' && c.innerText?.trim())).map(name);
   const edgeCount = (side) => {
     const counts = new Map();
     for (const el of all.filter((x) => x.matches('h1, h2, h3, h4, p, li, img, figure, picture, video, canvas, button, a.button, input, select, textarea, table, blockquote') && visible(x))) {
@@ -531,6 +534,7 @@
     imagesWithoutAlt: cap(noAlt),
     headings: cap(headingIssues),
     labelsAboveHeadings: cap(eyebrows),
+    italicInHeadings: cap(italicParts), // two or more is the generated habit, not emphasis
     // distinct left and right edges of content blocks, most used first; many one-off edges mean
     // elements that don't share alignment axes (compare with the grid in the plan)
     leftEdges: cap(edgeCount('left')),

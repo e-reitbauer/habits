@@ -110,6 +110,26 @@ not in the hero shot where it is a few pixels tall.
   "Shadows and the floor" below.
 - **Inspect at grazing light and close up** on joins before calling it done.
 
+## Sets
+
+A place (a town, a forest, a coast, a station) is judged like an object: from its silhouette and
+its details. The generated version is a row of identical boxes, cone trees and a flat plane for
+water.
+
+- **Buildings**: footprints, heights and colors that vary, real roofs (pitched or hipped, with an
+  overhang and a ridge), windows and doors as print or inset geometry, and the region's own forms
+  (arcades, chimneys, shutters, a campanile). Repeats go through `InstancedMesh` with a different
+  scale, turn and tint on each.
+- **Trees**: a trunk and a crown of a few clustered, displaced icospheres (or the region's real
+  shape: cypress, pine, poplar), each instance scaled and tinted differently. A cone is a placeholder.
+- **Water**: reads as water, not snow or glass: dark in its depth, bright only where it reflects the
+  sky, with moving ripples (`Water` from addons, or a normal map scrolled in two directions) and a
+  Fresnel edge toward the horizon.
+- **Distance**: fog or a haze in the mood's sky color, so the set fades into the backdrop instead
+  of ending at a cut edge.
+- **Budget**: keep the whole set within the triangle budget in `three.md`; detail goes where the
+  camera comes close, and far things are simple shapes the haze softens.
+
 ## Shadows and the floor
 
 A shadow that looks off is worse than none. The usual causes, each with its fix:

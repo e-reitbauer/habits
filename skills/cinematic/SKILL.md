@@ -27,9 +27,9 @@ Two things decide whether it feels cinematic or generated:
   headings and a default button, undoes the scene behind it. Each frame is composed so the type has
   its own calm area; captions boxed in dark plates mean the frame wasn't. The chrome stays minimal:
   a wordmark, one action and a quiet chapter indicator, not a website's tab bar of sections.
-  Minimal is not bare: controls and facts carry real icons from `ui`'s `scripts/icons.py` (a
-  speaker that changes when the sound toggle is on, an arrow or the subject's own symbol on the
-  action, an icon beside each spec), from one set whose stroke matches the type. A hollow square or
+  Minimal is not bare: controls and facts carry real icons from `ui`'s `scripts/icons.py` (an
+  arrow or the subject's own symbol on the action, an icon beside each spec, a chevron on the
+  chapter indicator), from one set whose stroke matches the type. A hollow square or
   a dot standing in for an icon is the bare version.
 
 **Load `ui` first, every time.** Before anything else, before reading any reference or writing a
@@ -149,6 +149,10 @@ A full 3D scene for something CSS could do is a cost with no benefit.
   shadows in its grooves: seen edge-on by a grazing camera, or face-on under flat light, it vanishes.
   A detail also needs time: it holds still for part of its scroll (`hold` in the skeleton) and
   gets a longer section, or it turns away before anyone has read it.
+- **Places, not only objects**: when the scene is a set the camera travels through (a landscape, a
+  street, a route), keep the text clear of it in every shot. The camera never passes through or
+  grazes the scenery (a tree, a roof, a wall), at a shot or between two; nothing stands between it
+  and its look point. Build the set to the bar in `modelling.md` ("Sets").
 
 ## 4. Scroll as the timeline
 
@@ -172,6 +176,12 @@ because a scene adds load:
   under about 3 MB before optional assets.
 - **Frame rate**: a steady 60 fps on a mid-range phone, and no long main-thread tasks while
   scrolling (INP under about 100 ms).
+- **No stutter while scrolling**: build every set before the first scroll, show each once and
+  compile it (`renderer.compileAsync`, textures through `renderer.initTexture`), so nothing compiles
+  or uploads on first view. Things that travel (a train, a car, the camera) move along smooth
+  curves, never a polyline or a straight blend between shots, and the world passes the camera no
+  faster than the eye can follow: a long jump between two places is a cut or a fade, not scenery
+  streaming by at scroll speed.
 - Show the HTML content first, then initialize the scene. Pause rendering when it's offscreen or the
   tab is hidden; while it's visible it keeps rendering, because it keeps moving. Render on demand
   only for the reduced-motion still.
@@ -191,9 +201,12 @@ because a scene adds load:
   A fixed header over the scene needs a backing once anything scrolls beneath it (a translucent
   surface with `backdrop-filter` blur, or a scrim), checked at the brightest, busiest frame; see the
   ui skill's `references/depth.md`.
-- Sound can be a signature moment when the subject makes one (a keystroke, a click, a pour): behind
-  a visible toggle, off until pressed, never autoplay, and synthesised with Web Audio so it adds no
-  weight (`references/skeleton.md`). Plan it in the storyboard like any other scene.
+- A form over a scene (a booking, a sign-up) sits on its own solid surface, never bare over the
+  set, with fields styled from the page's system and labels at 4.5:1 or more; on a phone it gets
+  its own place in the flow, not a layer over the scene. Follow `ui`'s `references/ux.md` (Forms).
+- No sound unless the user asks for it or the subject is sound (an instrument, a venue, a record).
+  Then it sits behind a visible toggle, off until pressed, never autoplays, and is synthesised with
+  Web Audio so it adds no weight (`references/skeleton.md`).
 
 ## 7. Clichés
 
@@ -224,7 +237,11 @@ checks:
   tasks and the structure checks instead, and say the fps needs a real device. Open the page with
   `?debug` so it also reports `textOverObject`: every point in the scroll where a heading, caption or
   button sits inside the object's screen area. Fix each one by changing that shot's fill or shift;
-  a dark plate behind the text is not the fix. It also reports `groundAndLight`: the ground's color
+  a dark plate behind the text is not the fix. `textLegibility` reads the rendered pixels behind
+  every piece of text that has no surface of its own and lists where the contrast falls under
+  WCAG (4.5:1, 3:1 for large text) or the ground behind it is busy; fix the shot, not the
+  text's color alone. `cameraClearance` lists where the camera sits inside or against scenery, or
+  something stands between it and the subject. It also reports `groundAndLight`: the ground's color
   and the lights at every tenth of the scroll, and how far they move over the whole story. `flat`
   means the ground never changes and the light moves too little to read as another scene: the
   storyboard's moods are not in the build. `oneColorGround` means each frame's ground is a single

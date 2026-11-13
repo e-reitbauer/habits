@@ -53,6 +53,10 @@ the plan check and the critique.
   Validate again on submit and focus the first error.
 - Errors next to the field. A summary only in addition to them.
 - Accept input in any reasonable format (spaces in phone numbers, any case in codes) and normalize it.
+- A choice among a few known values (departure dates, time slots, sessions) is a list of options
+  to pick, not a free date or text field; an open date range gets a picker styled from the system,
+  not the browser's bare `dd.mm.yyyy` field.
+- A form sits on its own solid surface: never bare over an image, a scene or a busy ground.
 - Warn before unsaved changes are lost.
 - The same error hit repeatedly is a design bug: fix the field or its wording.
 

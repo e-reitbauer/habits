@@ -16,6 +16,11 @@
   measure frame times yourself).
 - Draw calls: around 100 per frame on phones, a few hundred on desktop. Check
   `renderer.info.render.calls`.
+- Triangles: under about 300k per frame on phones, about 1M on desktop
+  (`renderer.info.render.triangles`).
+- Compile before the first scroll (`renderer.compileAsync`, with every set visible once) and upload
+  textures with `renderer.initTexture`: a shader compiled on first view is a dropped frame of 50 to
+  100 ms. Generate canvas textures at load, never in the loop.
 - Repeated objects as `InstancedMesh`; varied ones sharing a material as `BatchedMesh`; static
   geometry merged, with `matrixAutoUpdate` off.
 - Lights: three or fewer dynamic lights; bake the rest. Point light shadows cost six renders each.

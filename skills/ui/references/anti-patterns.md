@@ -42,6 +42,7 @@ default.
 | A floating box with dead space beside it; header edges that line up with nothing | One grid and shared alignment axes; empty space with a job (see `composition.md`) |
 | Stock buttons, nav bars and inputs that ignore the concept | Frame elements styled from the page's material |
 | One word of the headline in italic, bold or the accent color | Let the whole headline carry the meaning |
+| Headings that end in an italic half (`Night falls <em>over the Alps</em>`), one after another | Headings in one voice; emphasis, if any, once on the page where the meaning needs it |
 | Badge or pill above the H1 | Put the information in the text, or leave it out |
 | Meta strings joined with middle dots (`A · B · C`) | The project's separators, or a short sentence |
 | Labels written as `WORD — fragment` | Plain labels |
