@@ -49,7 +49,7 @@ Where a skill asks you to choose (how to validate a UI change, how to approve a 
 
 | Category | Units |
 |---|---|
-| languages | `kotlin`, `swift`, `typescript`, `python`, `rust` |
+| languages | `kotlin`, `swift`, `typescript`, `javascript`, `python`, `rust` |
 | frameworks | `vue`, `nuxt`, `spring-boot`, `compose-multiplatform` |
 | tools | `gradle`, `maven`, `docker-compose`, `xcode`, `github-actions` |
 | platforms | `android` |
