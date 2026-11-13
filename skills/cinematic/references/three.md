@@ -39,8 +39,10 @@
 
 ## The loop
 
-- Render on demand when nothing moves (`frameloop="demand"` and `invalidate()` in
-  react-three-fiber).
+- Render every frame while the scene is on screen: a damped camera and idle life (a slow orbit,
+  pointer parallax, parts drifting) keep moving between scroll gestures. Render on demand only when
+  the scene is truly still, as in the reduced-motion version (`frameloop="demand"` and
+  `invalidate()` in react-three-fiber).
 - Stop the loop when the canvas is offscreen (IntersectionObserver) or the tab is hidden.
 - Never allocate objects (vectors, materials) inside the frame loop.
 - Dispose geometries, materials, textures and render targets when a scene is removed.

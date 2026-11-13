@@ -7,8 +7,11 @@
   both directions.
 - Smooth the scrub slightly (GSAP ScrollTrigger `scrub: 0.5`–`1`, or a damped value in the render
   loop) so trackpads and wheels feel continuous; never so much that the page lags behind the hand.
-- Ease within the scene: hold on the important frame, move quickly between them. Linear progress
-  feels mechanical.
+- Keep the camera travelling. Map progress onto curves through the shots (`CatmullRomCurve3` for
+  the camera's direction and its look point), slow near each shot without stopping on it, and let
+  the camera chase that target with damping (`1 - Math.exp(-dt * 3.5)` per frame), so it rounds
+  every shot and comes to rest only when the scroll does (`skeleton.md`). Easing each segment to a
+  full stop makes it move, stop, move, stop; linear progress with no damping feels mechanical.
 - Snap to scene boundaries only when scenes are discrete chapters, and keep the snap soft.
 
 ## Pinning

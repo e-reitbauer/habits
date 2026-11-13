@@ -350,6 +350,13 @@ class UiTools(unittest.TestCase):
         self.assertEqual(set(card), set(direction.CINEMATIC_AXES))
         self.assertNotIn("layout spine", card)
 
+    def test_direction_cinematic_cards_never_deal_restrained_color_or_stepped_scale(self):
+        direction = ui_script("direction")
+        for seed in range(30):
+            card = direction.deal(random.Random(seed), "cinematic")
+            self.assertNotEqual(card["color strategy"][0], "restrained")
+            self.assertEqual(card["scale"][0], "extreme contrast")
+
     def test_direction_cards_name_no_fonts_or_hex_colors(self):
         direction = ui_script("direction")
         fonts = {f["name"] for f in ui_script("fonts").load()}

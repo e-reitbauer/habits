@@ -63,7 +63,7 @@ AXES = {
     ],
     "density": [
         ("airy", "few elements per view, generous space with a job", "dead space beside a small box"),
-        ("dense", "much information per view, tight but ordered, like a timetable or an almanac", "clutter without a grid"),
+        ("dense", "much information per view, tight but ordered, like an almanac or a parts catalog", "clutter without a grid"),
     ],
     "type structure": [
         ("one family with range", "a single family carries everything through widths, weights or optical sizes", "no contrast; use the range hard"),
@@ -75,6 +75,8 @@ AXES = {
 PRODUCT_AXES = ("color strategy", "type structure", "density")
 # a fixed-canvas scroll story is planned in scenes and shots, so the page-layout axes don't apply
 CINEMATIC_AXES = ("color strategy", "type structure", "scale")
+# a scene is spectacle: quiet neutrals and a size ladder with no giant give a product viewer
+CINEMATIC_NEVER = ("restrained", "stepped")
 
 
 def deal(rng, surface):
@@ -84,6 +86,8 @@ def deal(rng, surface):
         values = AXES[axis]
         if surface == "product" and axis == "color strategy":
             values = values[:2]  # product UI: restrained or committed, never drenched
+        elif surface == "cinematic":
+            values = [v for v in values if v[0] not in CINEMATIC_NEVER]
         card[axis] = rng.choice(values)
     return card
 
