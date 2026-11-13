@@ -10,21 +10,20 @@ well means choosing from a wider set, on purpose, and judging the fonts rendered
 - Describe the voice in three or four words from the concept, not from the industry. Look at the
   subject's own lettering: signage, packaging, manuals, timetables, stamps, enamel signs, rubber
   stamps, the labels on its tools. That vernacular is where a fitting typeface comes from.
-- Translate it into the tags `scripts/fonts.py` knows (`--tags` lists them). Structure: grotesque,
-  humanist, geometric, condensed, wide, rounded, serif, oldstyle, didone, slab, glyphic, mono,
-  script, handwritten, stencil, pixel. Voice: warm, calm, sturdy, quirky, elegant, technical,
-  vintage, playful, editorial, loud, delicate and more.
+## 2. Choose by eye
 
-## 2. Draw candidates, then choose
-
-- Run `python3 scripts/fonts.py --voice "<tags>" --role display`, and again with `--role text`.
-  The draw is random on purpose and leaves out the defaults and the most used fonts; every font in
-  it exists on Google Fonts or Fontshare, with a working stylesheet link.
-- Nothing fits? Draw again or change the tags. Don't fall back to your usual pick.
+- Pick faces whose letterforms carry that voice, from everything you know, the way a designer
+  flips through specimens: a face with character for the display, a calm one for text, or one
+  family with enough range for both.
+- When only the usual fonts come to mind, draw some: `python3 scripts/fonts.py --voice "<tags>"
+  --role display` (and `--role text`) returns a random set of fitting open fonts, leaving out the
+  defaults, each with a working stylesheet link (`--tags` lists the voice and structure tags).
+  Take one only if it suits the voice better than what you had.
 - When you can render pages, write a specimen (`--specimen <file> --text "<the real headline>"`),
   look at it, and delete it afterwards. Judge with real words at real sizes.
-- In the plan's direction, name the candidates you considered and why the chosen ones fit.
-- A font from outside the catalog: check that the exact name exists at its source before using it.
+- In the plan's direction, name the fonts and why they fit the voice.
+- A font from outside the Google Fonts and Fontshare catalogs: check that the exact name exists at
+  its source before using it.
 
 ## 3. Pair
 

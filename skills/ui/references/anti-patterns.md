@@ -56,7 +56,7 @@ default.
 
 | Default | Instead |
 |---|---|
-| Inter, Geist, Space Grotesk, Roboto, Instrument Serif, Fraunces, Playfair Display, picked by reflex | A random draw from `fonts.py`, judged against the concept's voice; one or two families, clearly distinct (`typography.md`) |
+| Inter, Geist, Space Grotesk, Roboto, Instrument Serif, Fraunces, Playfair Display, picked by reflex | Faces chosen for the concept's voice, or a draw from `fonts.py`; one or two families, clearly distinct (`typography.md`) |
 | The purple-to-blue wash, gradient text, gradient buttons, a gradient on every surface | Gradients with a job from the concept, built as in `color.md`: palette hues, `in oklab`, grain |
 | Hex values picked by feel; pure greys; one saturation for everything | OKLCH scales from `palette.py`, tinted neutrals, chroma by area size |
 | Colored glows and box-shadows; `shadow-lg` and `rounded-2xl` on everything; a border plus a soft shadow on one card | Radius and elevation that follow hierarchy: layered, tinted shadows only on what floats (`depth.md`) |
@@ -95,8 +95,9 @@ Plan motion with `motion.md`.
 | No hover, press or focus feedback at all | Every interactive element answers |
 | Animation that ignores `prefers-reduced-motion` | Reduced motion: keep fades, drop movement |
 
-## Restraint
+## After the list
 
-Restraint means fewer bold moves, not smaller ones. Let one or two signature moves carry the
-design (see `creativity.md`) and keep everything around them quiet. Before finishing, remove one
-accessory that doesn't serve the concept.
+A page with none of these can still be forgettable. Removing a tell never adds anything: whatever
+this pass takes out, the concept has to put something of its own in the same place. If the page
+is clean of every item here and the memory test in `creativity.md` still gets a mood for an answer,
+the page is too timid, and the fix is a bolder move, not another removal.

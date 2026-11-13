@@ -40,8 +40,7 @@ looks equally light across hues. HSL is not (yellow and blue at "50%" look nothi
 
 ## 3. Proportion and contrast
 
-**Pick a color strategy before picking colors** (the direction card from `scripts/direction.py`
-deals one):
+**Pick a color strategy before picking colors**, the one the concept needs:
 
 | Strategy | How the surface is spent |
 |---|---|
@@ -141,4 +140,6 @@ container and the grain overlay.
 ## Plan it
 
 In the direction, list the palette as roles with OKLCH values and where each comes from in the
-subject, the proportion, the dark-mode approach, and any gradient with its job.
+subject, the proportion, the dark-mode approach, and any gradient with its job. Give the
+proportion as shares of the page's surface; `scripts/page-checks.js` measures them on the build as
+`surface`, and a committed plan that renders 15% color was not built.

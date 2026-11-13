@@ -63,10 +63,10 @@ might stamp the due date onto a borrowed book.
   a short offset (30–80 ms between items, at most about 5 steps before the rest appear together).
 - One direction per transition. Things enter from where they live and leave the way they came.
 - Don't animate more than one thing that competes for attention at a time.
-- Page load: either nothing, or one orchestrated sequence that reveals the hierarchy. Never the same
-  fade-and-slide on every section.
-- Scroll-linked motion only where it explains something (progress, a reveal tied to content,
-  parallax with a reason), and never on body text.
+- Page load: on an expressive page one orchestrated sequence that reveals the hierarchy; on a
+  product screen nothing. Never the same fade-and-slide on every section.
+- Scroll-linked motion is tied to the content: progress, a reveal, the device or the object
+  answering the scroll, parallax with a reason. Never on body text.
 
 ## Craft
 
@@ -86,6 +86,14 @@ might stamp the due date onto a borrowed book.
 In the plan's direction, write a motion line: the motion tokens (durations and curves), what gets
 feedback, the transitions between states, and the signature moment. In the state table, say how
 each state is entered.
+
+## The floor
+
+An expressive page that ships with hover transitions and nothing else has no motion design, however
+complete its motion plan was. The build has at least the opening sequence or one scroll-linked
+sequence, and the signature moment. `scripts/page-checks.js` reports what it finds as `motion`;
+when everything except `controlsWithTransition` is zero, the plan didn't reach the page. Product
+screens need feedback and state transitions only.
 
 ## Avoid
 

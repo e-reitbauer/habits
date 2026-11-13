@@ -54,17 +54,12 @@ Then one line: why this hierarchy (what the user must see first, and why).
 
 **Direction** (Create mode; see `creativity.md`)
 ```
-World:      seven artifacts, systems, places or rituals of the subject, each with its visual trait
-Ruts:       the category default, and its predictable opposite
-Reference:  the one primary real-world reference and the three traits taken from it;
-            secondary references and the one detail each contributes
-Card:       the direction.py seed and the card kept (values rejected, with the brief's reason)
-Concepts:   five one-liners from obvious to unusual, each with how typical it is; the pick and why
-Concept:    the chosen one, in one sentence
+World:      the artifacts, places or rituals of the subject the design draws on, each with its visual trait
+Concept:    one sentence; and, if you used them, the reference, card or rival concepts that pushed it
 Scene:      one sentence of physical scene (who, where, under what light) and the light or dark ground it implies
 Colors:     the color strategy; 4-6 named values with roles (ink, surface, field, accent, ...) and
             where each covers the page, contrast-checked
-Type:       voice tags; the fonts.py candidates considered; families and roles, scale, weights
+Type:       the voice; families and roles and why they fit it; scale, weights
 Device:     the artifact it comes from, its kind, its large instance and its echoes (at least three places)
 Objects:    each object the page shows without a photo, and the rung of objects.md that makes it
 Images:     the photo plan: role, ratio, pattern, focal point, section (imagery.md)
@@ -76,7 +71,7 @@ From:       which fact about the subject each choice comes from
 
 **Sections** (the page as a sequence, each framed by numbers; see `composition.md`)
 ```
-| # | Section | Layout pattern | Spans (text / media, bleed) | Lead and its size | Space and its job | Height | What changes from the previous one |
+| # | Section | Layout pattern | Spans (text / media, bleed) | Lead and its size |
 ```
 
 **Motion** (see `motion.md`)

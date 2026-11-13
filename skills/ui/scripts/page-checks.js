@@ -438,6 +438,61 @@
   }
   const bodySize = +[...textSizes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 16;
 
+  // 17. Surface: what paints the page, sampled on a grid over the whole document. Later elements
+  // paint over earlier ones (document order; z-index is ignored)
+  const chroma = ([r, g, b]) => { // OKLCH chroma of an sRGB color
+    const [lr, lg, lb] = [r, g, b].map((c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+    const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+    const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+    const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+    return Math.hypot(1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s);
+  };
+  const painters = all.map((el) => {
+    if (!visible(el)) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width < 40 || r.height < 40) return null;
+    const s = getComputedStyle(el);
+    const c = parse(s.backgroundColor);
+    const kind = el.matches('img, video, canvas') || (el.tagName === 'svg' && r.width >= 120) || /url\(/.test(s.backgroundImage) ? 'media'
+      : s.backgroundImage !== 'none' ? 'gradient'
+      : c && c[3] > 0.5 ? (chroma(c) >= 0.04 ? 'color' : 'neutral') : null;
+    return kind && { kind, ground: kind === 'media' || kind === 'gradient' ? kind : s.backgroundColor,
+      left: r.left, right: r.right, top: r.top + scrollY, bottom: r.bottom + scrollY };
+  }).filter(Boolean);
+  const surface = { neutral: 0, color: 0, gradient: 0, media: 0 };
+  const grounds = new Map();
+  let points = 0;
+  for (let y = 24; y < document.documentElement.scrollHeight; y += 48) {
+    for (let x = vw / 48; x < vw; x += vw / 24) {
+      let hit = null;
+      for (const p of painters) if (x >= p.left && x < p.right && y >= p.top && y < p.bottom) hit = p;
+      surface[hit ? hit.kind : 'neutral'] += 1;
+      const ground = hit ? hit.ground : 'unpainted';
+      grounds.set(ground, (grounds.get(ground) || 0) + 1);
+      points += 1;
+    }
+  }
+  const share = (n) => Math.round(n / points * 100);
+
+  // 18. Motion: what the stylesheets declare and what runs right now
+  const motion = { keyframes: 0, scrollDriven: 0, startingStyle: 0, viewTransitions: 0, reducedMotionInCss: false };
+  const walk = (rules) => {
+    for (const rule of rules) {
+      const type = rule.constructor.name;
+      if (type === 'CSSKeyframesRule') motion.keyframes += 1;
+      if (type === 'CSSStartingStyleRule') motion.startingStyle += 1;
+      if (type === 'CSSViewTransitionRule') motion.viewTransitions += 1;
+      if (type === 'CSSMediaRule' && /prefers-reduced-motion/.test(rule.conditionText)) motion.reducedMotionInCss = true;
+      const timeline = rule.style?.getPropertyValue('animation-timeline');
+      if (timeline && timeline !== 'auto') motion.scrollDriven += 1;
+      if (rule.cssRules) walk(rule.cssRules);
+    }
+  };
+  for (const sheet of document.styleSheets) {
+    try { walk(sheet.cssRules); } catch { /* a cross-origin sheet can't be read */ }
+  }
+  const transitions = (el) => getComputedStyle(el).transitionDuration.split(',').some((d) => parseFloat(d) > 0);
+
   const shapes = sections.map(shape);
   const repeats = [];
   for (let i = 1; i < shapes.length; i++) {
@@ -451,6 +506,20 @@
     deadSides: cap(deadSides), // content pushed to one side with an empty other side: fill it, widen, or center on purpose
     // largest text / body text: expressive pages want 5x or more somewhere, product screens about 2.5x at most
     scaleContrast: { largestPx: Math.round(largest), bodyPx: bodySize, ratio: +(largest / bodySize).toFixed(1) },
+    // share of the page's surface by what paints it. Expressive pages: color + gradient + media under about 25% is
+    // the pale page, however careful; a committed color strategy means 30 to 60% color in the build
+    surface: { neutralPct: share(surface.neutral), colorPct: share(surface.color), gradientPct: share(surface.gradient),
+      mediaPct: share(surface.media),
+      grounds: [...grounds.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([c, n]) => `${c} ${share(n)}%`) },
+    // expressive pages: the opening or scroll-linked sequence and the signature moment show up as keyframes,
+    // scrollDriven, startingStyle, viewTransitions, running or a library; transitions alone are feedback.
+    // Script-driven motion without a known library only shows in `running` while it plays
+    motion: { ...motion,
+      animatedElements: all.filter((el) => getComputedStyle(el).animationName !== 'none').length,
+      running: document.getAnimations().length,
+      libraries: ['gsap', 'ScrollTrigger', 'Lenis', 'anime', 'Motion', 'THREE'].filter((n) => n in window),
+      canvases: document.querySelectorAll('canvas').length,
+      controlsWithTransition: `${interactive.filter(transitions).length} of ${interactive.length}` },
     horizontalOverflow: { page: overflow, ...cap(wide) },
     clippedText: cap(clipped),
     smallTargets: cap(small),

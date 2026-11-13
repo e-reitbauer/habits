@@ -27,8 +27,8 @@ silence: when the user said nothing about a choice, the guidance here applies.
 **Avoiding a default is not a direction.** This skill lists the looks generated pages converge on,
 but a design made by steering away from them lands on the next default (a cool grey page because
 cream is "AI", every section split in two because centered heroes are). Directions come from the
-subject, a real reference and a committed concept (`references/creativity.md`); the lists only
-check the result.
+subject and a committed concept (`references/creativity.md`); the lists only check the result.
+Design first, with your own eye; the floors, checks and lists come in the design review (step 7).
 
 ## 1. Pick the mode and the surface
 
@@ -76,15 +76,17 @@ apps and printed pieces in the category, and one outside it.
 
 ## 4. Plan
 
-**Read before planning.** Open these with the Read tool before you write the plan; the guidance that
-makes the result professional lives in them, and a plan written from memory falls back to defaults:
+**Read before planning**: `references/process.md` (the plan's templates) and, in Create mode or
+when the system leaves the identity open, `references/creativity.md`. Open the others when their
+part of the plan comes up: `references/composition.md` for the layout, `references/ux.md` for flows
+and states, `references/color.md`, `references/typography.md`, `references/decoration.md`,
+`references/imagery.md`, `references/objects.md`, `references/icons.md`, `references/depth.md` and
+`references/motion.md` for those choices, `references/product.md` and `references/native.md` for
+those surfaces. They are a library to draw on, not a checklist to clear before the first idea.
 
-- every mode that plans: `references/process.md`, `references/composition.md`,
-  `references/anti-patterns.md`, `references/ux.md`;
-- Create mode, or when the system leaves the identity open: also `references/creativity.md`,
-  `references/color.md`, `references/typography.md`, `references/decoration.md`;
-- when the page has photos: `references/imagery.md`; when it shows objects without photos:
-  `references/objects.md`; product surfaces: `references/product.md`; native: `references/native.md`.
+Leave `references/anti-patterns.md` closed until the plan is written. A plan made with the list of
+generated looks in view steers by it; the list checks a finished plan (the plan check below) and
+the rendered page (step 7).
 
 **The plan gate.** In Create and Extend mode, the plan is written out as text in your reply, before
 you write or edit any UI file. Your thinking is not visible to the user and doesn't count; the plan
@@ -92,28 +94,8 @@ is a message they can read. "Your plan is approved", "go ahead" or "build it" sk
 question in step 5, never the written plan; only an explicit "no plan" skips it. Writing the page
 first and describing it afterwards is not a plan.
 
-**Rules the build is held to** (the references explain each; these are the ones generated pages
-break most):
-- The direction comes from the subject's world, one real reference and a dealt card
-  (`scripts/direction.py`), never from avoiding a look.
-- Sections form a sequence of different layout patterns; no two neighbours share one, the photo
-  never swaps sides section after section, and at least one moment breaks the content width.
-- Every section is framed by numbers in the plan: the grid spans of text and media, the lead
-  element and its size, every empty area and its job, the height (`references/composition.md`).
-  The build follows the numbers, so the composition holds even if you never see a render. No side of
-  a section is left empty without a named job; somewhere on an expressive page the largest type is
-  5× the body size or more.
-- Photos bleed to a viewport edge or sit exactly on grid lines, in sizes that differ on purpose;
-  never a box inside the margins with dead space beside it, and never a near-bleed (almost full
-  width but stopping at the margins), least of all the opener.
-- Decoration stays inside its section and never crosses the navigation or a control.
-- One graphic device from a real artifact, in at least three places at different scales; bare is
-  a default too.
-- No small label, kicker or tag above a heading, no decorative 01/02/03 numbering, no meta strings
-  joined with middle dots, no identical card grids; the information goes into the heading, the
-  text or a caption.
-- Objects without photos are crafted or replaced (`references/objects.md`), never plain shapes.
-- You render and review the result yourself (step 7).
+Plan from the subject and the concept, not from the floors: the design review (step 7) holds the
+build against them, so you don't have to design to them.
 
 1. **Brief**: user, job, success signal, constraints, real content.
 2. **Flow**: one per user goal, from entry through the main path, branches and error recovery to exit.
@@ -121,11 +103,11 @@ break most):
 4. **Component map**: each region mapped to an existing component, a new variant, or a new component
    with the reason (step 6).
 5. **Direction** (Create, or when the system leaves it open): follow `references/creativity.md`:
-   the subject's world, the category default and its predictable opposite, one primary reference,
-   the constraints dealt by `scripts/direction.py`, five concepts and the pick. Then set:
+   the subject's world, the concept in one sentence, the signature moves. A real reference, a
+   dealt card (`scripts/direction.py`) or a handful of rival concepts are there for when the first
+   idea is the category's default. Then set:
    - the color strategy and palette, as in `references/color.md`;
-   - the typefaces, as in `references/typography.md`: draw candidates with `scripts/fonts.py`
-     for the concept's voice instead of reaching for your usual fonts;
+   - the typefaces, chosen by eye for the concept's voice (`references/typography.md`);
    - the graphic device and how much of it, as in `references/decoration.md`;
    - the images: each one's role, ratio and placement (`references/imagery.md`);
    - the objects the page shows without photos, and how they are made (`references/objects.md`);
@@ -135,22 +117,21 @@ break most):
    - the signature moves.
    If the concept would clearly gain from a cinematic layer (3D, a scroll-driven story), mention
    the `cinematic` skill to the user in a sentence; use it when they ask for that kind of site.
-6. **Layout**: the grid, then the page as a sequence of sections in this table, every cell filled
-   (`references/composition.md` explains each column):
+6. **Layout**: the grid, then the page as a sequence of sections (`references/composition.md`
+   explains each column):
 
    ```
-   | # | Section | Layout pattern | Spans (text / media, which edge bleeds) | Lead and its size | Empty areas and their jobs | Height |
+   | # | Section | Layout pattern | Spans (text / media, which edge bleeds) | Lead and its size |
    ```
 
-   "Empty areas" names every area wider than about a quarter of the screen that has no content, and
-   what it does there (holds the object, frames the headline, rests the eye before the order form).
-   An area without a job is a mistake to fix in the plan, not in the build. Then an ASCII wireframe
-   per screen (or per breakpoint when they differ) with the alignment axes marked.
+   Name the job of any large empty area (holds the object, frames the headline, rests the eye
+   before the order form). Add an ASCII wireframe where the table doesn't make the layout obvious.
 7. **Motion**: the motion tokens, what gives feedback, how states are entered, and the signature
    moment, following `references/motion.md`. In Extend mode, use the system's motion if it has one.
-8. **Plan check**: the memory test and ambition check in `references/creativity.md`, the defaults in
-   `references/anti-patterns.md` ("would I have produced this for any similar brief?"), the
-   composition check, and the UX checklist in `references/ux.md`. Revise and say what you changed.
+8. **Plan check**: the memory test and ambition check in `references/creativity.md`, the
+   composition check, and the UX checklist in `references/ux.md`. Then read
+   `references/anti-patterns.md` for the first time and hold the plan against it ("would I have
+   produced this for any similar brief?"). Revise and say what you changed.
 
 Scale it to the work: a new section in an existing system may need a five-line brief, a state table
 and a component map; a new product needs all eight.
@@ -265,9 +246,29 @@ even when they said they will check the result themselves, and regardless of the
   in `references/validation.md`: would you know the subject with the name covered? What does one
   viewport leave you with? Which section looks like a template? Is the device visible in at least
   three places? Does every image sit on the grid or a viewport edge? Does any object look like a
-  placeholder?
+  placeholder? What moves, and is the signature moment in the build?
+- Run `scripts/page-checks.js` and read the floors first: `scaleContrast`, `surface` and `motion`.
+  A page under a floor is too timid, and that is fixed before any detail. The bar on an expressive
+  page (the references explain each; the checks measure most):
+  - neighbouring sections differ in layout pattern, and at least one moment breaks the content
+    width (`sectionRepeats`);
+  - no side of a section is empty without a job (`deadSides`); somewhere the largest type is 5×
+    the body size or more (`scaleContrast`);
+  - photos bleed to a viewport edge or sit on grid lines, never a box inside the margins or a
+    near-bleed that stops just short of them;
+  - decoration stays inside its section and never crosses the navigation or a control;
+  - the graphic device shows in three places or more, at different scales;
+  - color covers the share its strategy names (a committed color 30 to 60%), and color fields and
+    images together a quarter of the surface or more (`surface`);
+  - motion exists: an orchestrated opening or one scroll-linked sequence, the signature
+    interaction, feedback on every control (`motion`);
+  - a subject made of physical things shows at least one of them as a photo or a made object.
 - Fix the weakest two things, render again, and repeat once more. Most of the quality comes from
   these two rounds.
+- Last, hold the page against the template chrome in `references/anti-patterns.md` (labels above
+  headings, decorative numbering, meta strings joined with dots, identical card grids) and move
+  that information into the heading, the text or a caption. This pass removes tells; it never
+  makes a page good, so it comes after the two rounds, not instead of them.
 - If nothing can render (a sandbox without a browser), say so plainly, review the code against the
   same questions, and list what the user should look at first.
 
@@ -302,9 +303,9 @@ the deterministic checks come first, and screenshots answer specific questions.
 
 The scripts live in this skill's `scripts/` folder (the base directory is shown when the skill loads):
 
-- `python3 scripts/direction.py [--seed N] [--cards 2]`: deals structural constraints for a
-  direction (color strategy, layout spine, grid, graphic device, scale, density, type structure),
-  so the plan starts away from your usual answer. See `references/creativity.md`.
+- `python3 scripts/direction.py [--seed N] [--cards 2]`: optional; deals structural constraints
+  for a direction (color strategy, layout spine, grid, graphic device, scale, density, type
+  structure) when the first idea is the category's default. See `references/creativity.md`.
 - `python3 scripts/contrast.py FG BG [FG BG ...] [--fix] [--min 4.5]`: WCAG ratio and APCA Lc for each
   pair; `--fix` suggests the closest passing color of the same hue; `--palette C1 C2 ...` checks every
   pair of a palette. Use it on every new or changed color pair.
@@ -314,9 +315,10 @@ The scripts live in this skill's `scripts/` folder (the base directory is shown 
 - `python3 scripts/gradient.py C1 C2 [C3] [--base COLOR] [--grain 0.06]`: CSS for a blurred mesh
   background from palette colors, interpolated in OKLab, with the blur container and grain. Its
   output holds color literals: put it in the token or theme file, or swap the values for tokens.
-- `python3 scripts/fonts.py --voice "TAGS" [--role display|text|mono] [--specimen FILE]`: a random draw
-  of fitting open fonts with working stylesheet links, leaving out the defaults; `--check FONT …`
-  flags overused ones. See `references/typography.md`.
+- `python3 scripts/fonts.py --voice "TAGS" [--role display|text|mono] [--specimen FILE]`: optional;
+  a random draw of fitting open fonts with working stylesheet links, leaving out the defaults, for
+  when only the usual fonts come to mind; `--check FONT …` flags overused ones in the review. See
+  `references/typography.md`.
 - `python3 scripts/icons.py sets | search QUERY [--set ph] | get SET:NAME … [--sprite]`: real icons from
   open sets as inline SVG (needs network). See `references/icons.md`.
 - `python3 scripts/pattern.py KIND [--size] [--stroke] [--color] [--opacity] [--fade]`: exact background
@@ -328,7 +330,8 @@ The scripts live in this skill's `scripts/` folder (the base directory is shown 
   it reports overflow, clipped text, small or overlapping targets, low contrast, unnamed controls,
   heading order, icons and dots off the text's cap height, icon sets in use, shadows, bars without
   a backing, broken or blurry images, neighbouring sections with the same layout, sections with
-  content on one side and nothing on the other, the scale contrast, and the fonts and colors in use.
+  content on one side and nothing on the other, the scale contrast, the share of the surface that
+  is color, image or neutral, the motion the page has, and the fonts and colors in use.
   See `references/validation.md`.
 - 3D objects and stills: the recipes in the `cinematic` skill's `references/modelling.md`, used as
   `references/objects.md` describes.

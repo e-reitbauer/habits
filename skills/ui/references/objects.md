@@ -37,9 +37,13 @@ Take the first rung that is available and good enough:
    - a soft cast shadow (a blurred ellipse) so it stands on the page.
    A flat, graphic style is fine when it is the concept (a pictogram system, a linocut look), but
    then it is drawn to the same rules: exact geometry, consistent stroke and corner, detail.
-6. **Type, the graphic device, or a data graphic instead of the object**: the names of the breads set
-   large, the jar's label as the hero, the schedule as the picture. Often the stronger choice.
-7. **Leave it out** and say which images would help most.
+6. **Type or the graphic device beside the object**: the names of the breads set large, the jar's
+   label as the hero. This carries the objects the page doesn't show; it doesn't replace all of
+   them. When the subject is physical things (food, products, tools, a place) and rungs 1 and 2 are
+   empty, at least one object is made on rung 3, 4 or 5 and leads a view. A page about honey with
+   no jar, comb or candle anywhere reads as a poster for a brand nobody has seen.
+7. **Leave it out**, only for an object that failed the craft bar twice, and say which images
+   would help most.
 
 CSS 3D (`transform-style: preserve-3d`) works for boxy objects only (a book, a box, a card, a phone):
 shade each face from one lightness token (top lightest, front middle, side darkest). Never build
@@ -57,4 +61,5 @@ Before an object goes on the page, check it at the size it will be shown:
 - **Grounding**: does it sit on something (a contact shadow, a surface, a plinth), or float?
 - **Set**: do several objects share one light, one camera angle and one finish?
 
-If an object fails two of these, take a lower rung of the ladder instead of shipping it.
+If an object fails two of these, fix what failed (usually the light direction, the detail or the
+grounding) and check it again. Take a lower rung only when the second attempt fails too.

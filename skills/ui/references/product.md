@@ -3,8 +3,8 @@
 Apps, dashboards, settings, admin tools and data-dense screens are used, not visited. People come
 back to them every day and expect them to work like everything else they use. Distinctive product
 design (Linear, Stripe, Things, Raycast) is distinctive in a few chosen places and strictly
-conventional everywhere else. Running the full expressive direction (five concepts, the least
-typical one, a graphic device everywhere) on a settings page makes it worse.
+conventional everywhere else. Pushing an expressive concept into every corner (a graphic device
+everywhere, invented controls) on a settings page makes it worse.
 
 ## Where identity goes
 
@@ -17,7 +17,7 @@ typical one, a graphic device everywhere) on a settings page makes it worse.
 - The theme itself: a small set of inputs (base, accent, contrast) that generates every surface in
   OKLCH, so light, dark and high-contrast themes come from one system.
 
-Deal only the product axes: `python3 scripts/direction.py --surface product`.
+If you deal a card, deal only the product axes: `python3 scripts/direction.py --surface product`.
 
 ## Where convention rules
 

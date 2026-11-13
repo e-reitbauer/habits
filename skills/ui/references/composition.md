@@ -70,7 +70,8 @@ Rules for the sequence:
 
 "Make it balanced" does nothing when you build without seeing the page, and you often do: the
 render may fail, and even when it works you see it only after the code exists. Composition that is
-written as numbers in the plan survives. For every section, set:
+written as numbers in the plan survives. For every section, set the spans and the lead; name the
+space and the height where they matter:
 
 | Number | What it fixes | Example |
 |---|---|---|

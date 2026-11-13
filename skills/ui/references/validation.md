@@ -25,10 +25,17 @@ not at the code.
    - **Atoms**: do the nav, buttons, inputs and footer belong to this page, or to a component kit?
    - **Plan**: which planned signature move is weaker in the build than in the plan? Does each
      section match its numbers (spans, the lead's size, the empty space and its job)?
-   - **Measured**: run `scripts/page-checks.js` and read `deadSides` (content on one side, nothing
-     on the other), `sectionRepeats` (neighbours built the same way), `scaleContrast` (5× or more
-     somewhere on an expressive page), `nearBleed` (a wide image that stops at the margins),
-     `controlsCovered` and `decorationEscapes` (a decoration over the nav or a button, or reaching out
+   - **Floors**: run `scripts/page-checks.js` and read what an expressive page must reach before
+     anything else. `scaleContrast`: 5× or more somewhere. `surface`: color, gradient and media
+     together a quarter of the page or more, and the color share the plan's strategy names
+     (committed: 30 to 60%); `mediaPct` 0 on a page about physical things means no object was made
+     (`objects.md`). `motion`: something besides `controlsWithTransition`, that is keyframes, a
+     scroll-driven or view transition, a running animation or a motion library; all zeros means
+     the motion plan isn't in the build. A page under a floor is too timid: that is one of the two
+     weakest points, ahead of any detail.
+   - **Measured**: then read `deadSides` (content on one side, nothing on the other),
+     `sectionRepeats` (neighbours built the same way), `nearBleed` (a wide image that stops at the
+     margins), `controlsCovered` and `decorationEscapes` (a decoration over the nav or a button, or reaching out
      of its section), `contentOverlaps` (text on text, or on a photo that isn't a deliberate layer).
      Each finding is one of the weakest points; an overlap is always fixed first.
 3. Fix the two weakest points, render again, answer again. Then a second round.
@@ -60,7 +67,7 @@ through first. Delete the screenshots and any `.playwright-mcp/` folder from the
    boxes with a border plus a soft shadow, images side by side whose edges almost line up,
    images that float off the grid, sections with a dead side (`deadSides`) and neighbouring
    sections with the same structure (`sectionRepeats`). `scaleContrast` should reach the plan's
-   lead sizes. `icons` should show one set in one style, and
+   lead sizes, `surface` its color shares and `motion` its motion line. `icons` should show one set in one style, and
    `shadows` no more distinct values than the plan's elevation levels. Compare
    `leftEdges` and `rightEdges` with the plan's grid: a few heavily used edges are the axes, and
    every one-off edge is an element to align or justify. Compare `fontsDeclared` and `colorsUsed`
