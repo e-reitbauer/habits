@@ -99,7 +99,7 @@ async () => {
       1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
   };
   const cssGround = () => { // a transparent canvas: the ground is the first painted background behind it
-    const ctx = document.createElement('canvas').getContext('2d');
+    const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
     for (let el = three.renderer.domElement; el; el = el.parentElement) {
       ctx.clearRect(0, 0, 1, 1);
       ctx.fillStyle = getComputedStyle(el).backgroundColor;
@@ -216,8 +216,12 @@ async () => {
     if (!three?.THREE || !three.scene || !three.camera) return;
     const { THREE } = three, cam = three.camera, origin = cam.getWorldPosition(new THREE.Vector3()), ray = new THREE.Raycaster();
     const meshes = [];
-    // solid scenery only: glows, decals and light pools are one-sided transparent planes on purpose
-    three.scene.traverseVisible((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && !o.material.transparent) meshes.push(o); });
+    // solid scenery only: glows, decals and light pools are one-sided transparent planes on purpose, and
+    // a backdrop or sky dome (back faces, no depth) surrounds the camera by design
+    three.scene.traverseVisible((o) => {
+      const m = o.material;
+      if (o.isMesh && m && !Array.isArray(m) && !m.transparent && m.depthWrite && m.side !== THREE.BackSide) meshes.push(o);
+    });
     const sides = meshes.map((m) => m.material.side);
     meshes.forEach((m) => { m.material.side = THREE.DoubleSide; });  // restored below, before any render
     const first = (dir, far = Infinity) => { ray.set(origin, dir.normalize()); ray.far = far; return ray.intersectObjects(meshes, false)[0]; };
@@ -241,7 +245,8 @@ async () => {
     if (!found && three.subject) {
       const sphere = new THREE.Box3().setFromObject(three.subject).getBoundingSphere(new THREE.Sphere());
       const toHero = sphere.center.clone().sub(origin), d = toHero.length() - sphere.radius;
-      const hit = d > 0 && first(toHero, d);
+      const p = sphere.center.clone().project(cam), inView = p.z < 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1;  // shots of another place don't count
+      const hit = d > 0 && inView && first(toHero, d);
       let inHero = false; hit?.object?.traverseAncestors((a) => { inHero ||= a === three.subject; });
       if (hit && !inHero) found = `${label(hit.object, hit.instanceId)} stands between the camera and the subject`;
     }
