@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: night-train-journey
+expected_outcome: |
+  A storyboard (a journey in scenes from boarding at dusk to arrival at dawn, with a peak and camera language) comes before code; the 3D builds several settings from the subject (the train, terrain or a viaduct, the sleeper interior, the lagoon) rather than one object or generic primitives; the light and ground move from dusk through night to dawn; the story lands on booking; content lives in HTML; performance, reduced-motion and no-WebGL fallbacks are handled.
