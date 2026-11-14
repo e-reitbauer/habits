@@ -1,7 +1,8 @@
 ---
-type: llm
-focus: trace
-weight: 1
+type: regex
+target: trace
+flags: i
+match: contains
 ---
 
-Before writing index.html, Claude wrote a design plan naming colors, typefaces and a layout concept, and tied at least some of those choices to bouldering, climbing or the gym itself.
+^(?:(?!"name":"Write")[\s\S])*?\n\{"type":"assistant"[^\n]*?"type":"text","text":"(?=(?:[^"\\]|\\.)*?colou?r)(?=(?:[^"\\]|\\.)*?(?:typeface|font))(?=(?:[^"\\]|\\.)*?(?:layout|section))(?=(?:[^"\\]|\\.)*?(?:boulder|climb|chalk|\bholds?\b|route))

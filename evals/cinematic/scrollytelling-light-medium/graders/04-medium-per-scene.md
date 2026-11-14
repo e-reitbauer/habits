@@ -1,7 +1,8 @@
 ---
-type: llm
-focus: trace
-weight: 1
+type: regex
+target: trace
+flags: i
+match: contains
 ---
 
-Claude storyboarded the story as scenes and chose a medium per scene (CSS, SVG, images, canvas or WebGL) with a reason, using the lightest one that achieves each scene.
+^(?:(?!"name":"Write")[\s\S])*?\n\{"type":"assistant"[^\n]*?"type":"text","text":"(?=(?:[^"\\]|\\.)*?(?:\|\s*Scene\b|storyboard))(?=(?:[^"\\]|\\.)*?\\n\|)(?=(?:[^"\\]|\\.)*?\bmedium\b)(?=(?:[^"\\]|\\.)*?\b(?:CSS|SVG|canvas)\b)
